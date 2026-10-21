@@ -1,0 +1,40 @@
+/* Variables del panell. Tipografies corporatives UAUU. */
+@font-face {
+  font-family: 'Ogg';
+  src: url('../assets/fonts/Ogg_Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-ui: Inter, system-ui, 'Segoe UI', sans-serif;
+  --font-heading: 'Ogg', serif;
+
+  /* Paleta: eina interna, to fred i sobri (blau fosc de tinta + gris blavós). */
+  --tinta: #14212b;
+  --tinta-suau: #4a5966;
+  --fosc: #12263a;
+  --fosc-hover: #1f4163;
+  --paper: #ffffff;
+  --fons: #eceff2;
+  --linia: #cfd6dc;
+  --focus: #0b5cad;
+
+  /* Estats: text i fons amb contrast >= 4.5:1. */
+  --ok-text: #14532d;
+  --ok-fons: #dcf1e3;
+  --ok-icona: #1e7a44;
+  --atencio-text: #6b3a00;
+  --atencio-fons: #ffe9c2;
+  --atencio-icona: #b86200;
+  --problema-text: #8a1717;
+  --problema-fons: #fbdada;
+  --problema-icona: #b42323;
+  --neutre-text: #3b4852;
+  --neutre-fons: #e1e6ea;
+
+  --espai: 1rem;
+  --radi: 4px;
+  --corba: cubic-bezier(0.22, 0.8, 0.24, 1);
+}

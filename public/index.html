@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Correus UAUU · Estat</title>
+  <link rel="icon" href="assets/favicon.ico">
+  <link rel="stylesheet" href="css/variables.css?v=__VERSIO__">
+  <link rel="stylesheet" href="css/base.css?v=__VERSIO__">
+  <link rel="stylesheet" href="css/panell.css?v=__VERSIO__">
+</head>
+<body>
+  <a class="salta" href="#contingut">Salta al contingut</a>
+
+  <!-- Accés -->
+  <main id="vista-login" class="login" hidden>
+    <form id="form-login" class="login__form" autocomplete="on">
+      <p class="marca">UAUU</p>
+      <h1>Correus automàtics</h1>
+      <label for="usuari">Usuari</label>
+      <input id="usuari" name="username" type="text" autocomplete="username" required>
+      <label for="contrasenya">Contrasenya</label>
+      <input id="contrasenya" name="password" type="password" autocomplete="current-password" required>
+      <p id="error-login" class="error-text" role="alert" hidden></p>
+      <button type="submit" class="boto">Entrar</button>
+    </form>
+  </main>
+
+  <!-- Panell -->
+  <div id="vista-panell" hidden>
+    <header class="capcalera">
+      <div class="capcalera__interior">
+        <p class="marca">UAUU</p>
+        <h1>Correus automàtics</h1>
+        <button id="boto-sortir" type="button" class="boto boto--clar">Sortir</button>
+      </div>
+    </header>
+
+    <div id="avis-prova" class="franja franja--prova" role="status" hidden>
+      Mode prova: només s'envia als destinataris de la llista blanca. La resta queden cancel·lats.
+    </div>
+    <div id="avis-connexio" class="franja franja--error" role="alert" hidden></div>
+
+    <main id="contingut" class="panell">
+      <section id="semafor" class="semafor semafor--cap" aria-labelledby="semafor-titol">
+        <div class="semafor__icona" id="semafor-icona" aria-hidden="true"></div>
+        <div class="semafor__text">
+          <h2 id="semafor-titol">Carregant l'estat…</h2>
+          <ul id="semafor-motius" class="motius"></ul>
+        </div>
+        <p id="actualitzat" class="actualitzat"></p>
+      </section>
+
+      <section aria-labelledby="titol-ritme" class="bloc">
+        <h2 id="titol-ritme">Enviaments per hora (últimes 24 h)</h2>
+        <div id="ritme" class="ritme"></div>
+      </section>
+
+      <section aria-labelledby="titol-xifres" class="bloc">
+        <h2 id="titol-xifres">Xifres</h2>
+        <dl id="xifres" class="xifres"></dl>
+      </section>
+
+      <section aria-labelledby="titol-proces" class="bloc">
+        <h2 id="titol-proces">Procés i servidor de correu</h2>
+        <dl id="proces" class="xifres xifres--ample"></dl>
+        <div class="accions">
+          <button id="boto-smtp" type="button" class="boto">Comprovar SMTP ara</button>
+          <p id="resultat-smtp" class="nota" role="status"></p>
+        </div>
+        <h3>Errors recents</h3>
+        <ul id="errors" class="errors"></ul>
+      </section>
+
+      <section aria-labelledby="titol-historial" class="bloc">
+        <h2 id="titol-historial">Historial d'enviaments</h2>
+        <form id="filtres" class="filtres">
+          <div>
+            <label for="filtre-estat">Estat</label>
+            <select id="filtre-estat">
+              <option value="">Tots</option>
+              <option value="ENVIAT">Enviat</option>
+              <option value="PENDENT">Pendent</option>
+              <option value="ENVIANT">Enviant</option>
+              <option value="FALLIT">Fallit</option>
+              <option value="CANCELAT">Cancel·lat</option>
+            </select>
+          </div>
+          <div class="filtres__cerca">
+            <label for="filtre-cerca">Destinatari</label>
+            <input id="filtre-cerca" type="search" maxlength="100" placeholder="correu@exemple.com">
+          </div>
+        </form>
+        <div class="taula-contenidor">
+          <table class="taula">
+            <caption class="nomes-lector">Últims correus de la cua, del més recent al més antic</caption>
+            <thead>
+              <tr><th scope="col">Data</th><th scope="col">Destinatari</th><th scope="col">Assumpte</th><th scope="col">Estat</th><th scope="col" class="num">Intents</th><th scope="col">Detall</th></tr>
+            </thead>
+            <tbody id="historial"></tbody>
+          </table>
+        </div>
+        <p id="historial-buit" class="nota" hidden>No hi ha cap correu que coincideixi amb el filtre.</p>
+        <nav class="paginacio" aria-label="Paginació de l'historial">
+          <button id="pag-anterior" type="button" class="boto boto--clar-fosc">Anterior</button>
+          <p id="pag-info" class="nota"></p>
+          <button id="pag-seguent" type="button" class="boto boto--clar-fosc">Següent</button>
+        </nav>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="js/main.js?v=__VERSIO__"></script>
+</body>
+</html>

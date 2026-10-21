@@ -1,0 +1,57 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fons);
+  color: var(--tinta);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1, h2, h3 { font-family: var(--font-heading); font-weight: 500; line-height: 1.2; margin: 0; }
+h3 { font-size: 1.125rem; margin: 1.5rem 0 0.5rem; }
+
+[hidden] { display: none !important; }
+
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.salta {
+  position: absolute; left: 0.5rem; top: -4rem; background: var(--paper); color: var(--tinta);
+  padding: 0.5rem 0.75rem; z-index: 10;
+}
+.salta:focus { top: 0.5rem; }
+
+.nomes-lector {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+label { display: block; font-size: 0.875rem; font-weight: 600; margin: 0 0 0.25rem; }
+
+input, select {
+  width: 100%; min-height: 2.75rem; padding: 0.5rem 0.75rem; font: inherit; color: var(--tinta);
+  background: var(--paper); border: 1px solid #8996a1; border-radius: var(--radi);
+}
+
+.boto {
+  min-height: 2.75rem; padding: 0.5rem 1.25rem; font: inherit; font-weight: 600; cursor: pointer;
+  color: #fff; background: var(--fosc); border: 1px solid var(--fosc); border-radius: var(--radi);
+  transition: transform 160ms var(--corba), background-color 160ms var(--corba);
+}
+.boto:hover { background: var(--fosc-hover); border-color: var(--fosc-hover); }
+.boto:active { transform: scale(0.97); }
+.boto:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.boto--clar { background: transparent; color: #f2f5f8; border-color: #8ea3b6; }
+.boto--clar:hover { background: #ffffff1f; border-color: #f2f5f8; }
+.boto--clar-fosc { background: var(--paper); color: var(--fosc); border-color: #8996a1; }
+.boto--clar-fosc:hover { background: #e3eaf0; border-color: var(--fosc); }
+
+.marca { margin: 0; font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.18em; font-size: 0.8125rem; }
+.nota { margin: 0; color: var(--tinta-suau); font-size: 0.875rem; }
+.error-text { margin: 0; color: var(--problema-text); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
