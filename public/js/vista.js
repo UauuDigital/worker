@@ -109,6 +109,7 @@ export function pintaProces(d) {
   const smtp = v.ok === null ? 'Encara no comprovat' : v.ok ? 'Correcte' : 'Ha fallat';
   const petitSmtp = v.at ? `Comprovat ${fa(v.at)} (${formataDataHora(v.at)})${v.ok === false && v.missatge ? `. ${v.missatge}` : ''}` : null;
   $('proces').replaceChildren(
+    dada('Aquest worker', d.workerId, { petit: 'Identifica qui ha tancat cada correu a l’historial' }),
     dada('Mode del worker', d.mode === 'bucle' ? 'Bucle continu' : 'Tick (cron extern)', { petit: d.mode === 'bucle' ? 'Consulta la cua cada 2 segons' : 'Només treballa quan algú crida POST /api/tick' }),
     dada('Temps en marxa', durada(p.segonsEnMarxa), { petit: 'Des de l’últim reinici del procés' }),
     dada('Últim senyal de vida', p.ultimBatecAt ? fa(p.ultimBatecAt) : 'Cap', { petit: p.ultimBatecAt ? formataDataHora(p.ultimBatecAt) : null }),
@@ -138,6 +139,8 @@ function detallFila(f) {
   return f.motiu || '';
 }
 
+const etiquetaWorker = (w) => (w === null ? '—' : w === 'antic' ? 'Antic (Railway o local sense actualitzar)' : w);
+
 export function pintaHistorial(h) {
   const cos = $('historial');
   buida(cos);
@@ -153,6 +156,7 @@ export function pintaHistorial(h) {
       celda('Assumpte', document.createTextNode(f.assumpte)),
       celda('Estat', el('span', { class: `estat estat--${f.estat}`, text: ETIQUETA_ESTAT[f.estat] || f.estat })),
       celda('Intents', document.createTextNode(String(f.intents)), 'num'),
+      celda('Worker', document.createTextNode(etiquetaWorker(f.worker))),
       celda('Detall', document.createTextNode(detallFila(f))),
     );
     tr.style.animationDelay = `${Math.min(i, 12) * 15}ms`;

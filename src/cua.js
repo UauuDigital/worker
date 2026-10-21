@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const ARA_UTC = "(now() AT TIME ZONE 'UTC')";
 const COLUMNES_CORREU = '"id", "leadId", "automatitzacioId", "destinatariEmail", "destinatariNom", "assumpte", "cosHtml", "cosText", "intents"';
 
-function creaCua(bd, log) {
+function creaCua(bd, log, workerId = null) {
   // Reserva atòmica: FOR UPDATE SKIP LOCKED evita que dos workers agafin el mateix.
   async function reservaSeguent(bloquejaMinuts) {
     const r = await bd.query(
@@ -42,7 +42,7 @@ function creaCua(bd, log) {
          VALUES ($1, ${ARA_UTC}, $2::"OrigenAuditoria", $3, $4, $5, $6, $7::jsonb)`,
         [
           crypto.randomUUID(), 'AUTOMATIC', c.leadId ? 'Lead' : 'CorreuCua', c.leadId || c.id,
-          action, resum, JSON.stringify({ font: 'worker-correus', correuId: c.id }),
+          action, resum, JSON.stringify({ font: 'worker-correus', correuId: c.id, ...(workerId ? { workerId } : {}) }),
         ],
       );
     } catch (err) {

@@ -71,6 +71,7 @@ function creaEstadistiques(bd, estat, config) {
       generatAt: new Date(ara).toISOString(),
       semafor,
       mode: config.mode,
+      workerId: config.workerId,
       llistaBlanca: { activa: config.llistaBlanca.length > 0, entrades: config.llistaBlanca.length },
       targetes: {
         enviatsAvui: d.enviatsAvui, enviats24h: d.enviats24h, enviats7d: d.enviats7d,
@@ -99,12 +100,25 @@ function creaEstadistiques(bd, estat, config) {
     const text = String(cerca || '').trim().slice(0, 100);
     const patro = text ? `%${text.replace(/[\\%_]/g, '\\$&')}%` : null;
 
+    // El worker que ha tancat el correu es llegeix de l'auditoria (metadata.workerId), sense cap taula nova.
+    // Es busca per (targetType, targetId), que té índex, i després es filtra per correuId.
     const r = await bd.query(
-      `SELECT "createdAt", "destinatariEmail", "assumpte", "estat"::text AS "estat", "intents", "enviatAt",
-              "properIntentAt", "bloquejatFins", "darrerError", "motiuCancelacio", count(*) OVER()::int AS "total"
-       FROM "correus_cua"
-       WHERE ($1::text IS NULL OR "estat"::text = $1) AND ($2::text IS NULL OR "destinatariEmail" ILIKE $2)
-       ORDER BY "createdAt" DESC, "id" DESC
+      `SELECT c."createdAt", c."destinatariEmail", c."assumpte", c."estat"::text AS "estat", c."intents", c."enviatAt",
+              c."properIntentAt", c."bloquejatFins", c."darrerError", c."motiuCancelacio",
+              a."workerId", (a."trobada" IS TRUE) AS "teAuditoria", count(*) OVER()::int AS "total"
+       FROM "correus_cua" c
+       LEFT JOIN LATERAL (
+         SELECT l."metadata"->>'workerId' AS "workerId", true AS "trobada"
+         FROM "audit_logs" l
+         WHERE l."targetType" = CASE WHEN c."leadId" IS NULL THEN 'CorreuCua' ELSE 'Lead' END
+           AND l."targetId" = COALESCE(c."leadId", c."id")
+           AND l."action" IN ('CORREU_ENVIAT', 'CORREU_CANCELAT', 'CORREU_FALLIT')
+           AND l."metadata"->>'correuId' = c."id"
+         ORDER BY l."createdAt" DESC
+         LIMIT 1
+       ) a ON true
+       WHERE ($1::text IS NULL OR c."estat"::text = $1) AND ($2::text IS NULL OR c."destinatariEmail" ILIKE $2)
+       ORDER BY c."createdAt" DESC, c."id" DESC
        LIMIT ${MIDA_PAGINA} OFFSET $3`,
       [estatValid, patro, (p - 1) * MIDA_PAGINA],
     );
@@ -115,6 +129,8 @@ function creaEstadistiques(bd, estat, config) {
       assumpte: x.assumpte,
       estat: x.estat,
       intents: x.intents,
+      // id del worker; 'antic' = tancat per un worker sense etiqueta (Railway o un local sense actualitzar); null = encara sense tancar.
+      worker: x.teAuditoria ? (x.workerId || 'antic') : null,
       enviatAt: x.enviatAt ? x.enviatAt.toISOString() : null,
       properIntentAt: x.properIntentAt ? x.properIntentAt.toISOString() : null,
       // El bloqueig es posa en reservar (ara + 5 min): d'aquí es dedueix des de quan s'està enviant.

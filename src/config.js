@@ -1,6 +1,8 @@
 // Lectura i validació de l'entorn. Mai es mostra el VALOR d'una variable,
 // només el seu nom i què en falla.
 
+const os = require('node:os');
+
 const OBLIGATORIES = [
   'DATABASE_URL', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS',
   'CORREU_REMITENT_EMAIL', 'PANELL_USUARI', 'PANELL_CONTRASENYA',
@@ -55,6 +57,8 @@ function carregaConfig(env) {
       tickSecret: env.TICK_SECRET || null,
       tickMaxSegons: tickMax,
       panell: { usuari: env.PANELL_USUARI, contrasenya: env.PANELL_CONTRASENYA },
+      // Identificador d'aquest worker: apareix a l'auditoria, al Message-ID i al panell.
+      workerId: (env.WORKER_ID || os.hostname() || 'worker').replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 32),
       port,
       trustProxy: enter(env.TRUST_PROXY, 1),
       // Per defecte s'exigeix HTTPS; en local es pot desactivar amb EXIGEIX_HTTPS=false.

@@ -23,14 +23,14 @@ const { creaApp } = require('./src/app');
 const bd = creaBd(config.urlBd, log);
 const estat = creaEstat({ fitxer: config.fitxerEstat });
 const enviador = creaEnviador(config);
-const motor = creaMotor({ cua: creaCua(bd, log), enviador, estat, log, config });
+const motor = creaMotor({ cua: creaCua(bd, log, config.workerId), enviador, estat, log, config });
 const app = creaApp({
   config, log, motor,
   seguretat: creaSeguretat(config, log),
   estadistiques: creaEstadistiques(bd, estat, config),
 });
 
-const servidor = app.listen(config.port, () => log.info(`Panell escoltant al port ${config.port} (mode ${config.mode})`));
+const servidor = app.listen(config.port, () => log.info(`Panell escoltant al port ${config.port} (mode ${config.mode}, worker «${config.workerId}»)`));
 
 let bucle = Promise.resolve();
 (async () => {

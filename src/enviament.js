@@ -1,4 +1,5 @@
 // Enviament SMTP amb nodemailer. Port 587 = STARTTLS (secure:false + requireTLS).
+const crypto = require('node:crypto');
 const nodemailer = require('nodemailer');
 
 // `opcions` només l'usen les proves (servidor SMTP fals sense TLS).
@@ -15,10 +16,15 @@ function creaEnviador(config, opcions = {}) {
     socketTimeout: 20_000,
   });
 
+  // El Message-ID porta l'identificador del worker: queda al correu enviat i a `messageId` de la cua.
+  const domini = config.remitent.email.split('@')[1] || 'localhost';
+  const nouMessageId = () => `<${crypto.randomUUID()}.${config.workerId || 'worker'}@${domini}>`;
+
   return {
     verifica: () => transport.verify(),
     async envia(c) {
       const info = await transport.sendMail({
+        messageId: nouMessageId(),
         from: { name: config.remitent.nom, address: config.remitent.email },
         to: c.destinatariNom ? { name: c.destinatariNom, address: c.destinatariEmail } : c.destinatariEmail,
         subject: c.assumpte,

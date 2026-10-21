@@ -280,3 +280,22 @@ test('historial: un correu «enviant» porta des de quan i quan es reprendrà; e
     assert.match(e.semafor.motius.join(' '), /«enviant» des de fa 95 segons/);
   } finally { await s.atura(); }
 });
+
+test('historial: la columna «worker» distingeix els etiquetats, els antics i els no tancats', async () => {
+  const ara = Date.now();
+  const fila = (estat, extra) => ({ createdAt: new Date(ara), destinatariEmail: 'a@exemple.com', assumpte: 'X', estat, intents: 1, enviatAt: null,
+    properIntentAt: new Date(ara), bloquejatFins: null, darrerError: null, motiuCancelacio: null, ...extra });
+  const bd = creaBdFalsa({ historial: [
+    fila('ENVIAT', { workerId: 'servatica', teAuditoria: true }),
+    fila('ENVIAT', { workerId: null, teAuditoria: true }),
+    fila('PENDENT', { workerId: null, teAuditoria: false }),
+  ] });
+  const s = await arrenca({ bd, entorn: { WORKER_ID: 'servatica' } });
+  try {
+    const c = galeta(await s.login());
+    const h = await (await s.demana('/api/historial', { headers: { Cookie: c } })).json();
+    assert.deepEqual(h.files.map((f) => f.worker), ['servatica', 'antic', null]);
+    const e = await (await s.demana('/api/estat', { headers: { Cookie: c } })).json();
+    assert.equal(e.workerId, 'servatica');
+  } finally { await s.atura(); }
+});

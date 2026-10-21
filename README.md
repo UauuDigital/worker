@@ -34,6 +34,7 @@ Aplicació Node.js que consumeix la cua `correus_cua` del CRM i envia els correu
 | `TICK_SECRET` | Secret (mín. 16 caràcters) per a `POST /api/tick`. Obligatori en mode `tick` |
 | `TICK_MAX_SEGONS` | Durada màxima d'un tick (25 per defecte) |
 | `PANELL_USUARI`, `PANELL_CONTRASENYA` | Accés al panell (contrasenya de 12 caràcters com a mínim) |
+| `WORKER_ID` | Nom d'aquest worker (p. ex. `servatica`, `local-marti`). Surt a l'historial del panell, a l'auditoria i al Message-ID. Per defecte, el nom de la màquina |
 | `PORT` | Port d'escolta (3000) |
 | `TRUST_PROXY` | Nombre de proxies de confiança (1 per defecte) |
 | `EXIGEIX_HTTPS` | `false` només per a desenvolupament local |
@@ -62,6 +63,15 @@ L'aplicació valida l'entorn en arrencar i diu quines variables falten (mai en m
 2. Comprova el panell, el semàfor i «Comprovar SMTP ara».
 3. Fes que el CRM encui un correu cap a tu i verifica que arriba i surt com a `ENVIAT`.
 4. **Només llavors** deixa `CORREU_LLISTA_BLANCA` buida i reinicia. Compte: els correus de clients que van quedar `CANCELAT` durant la prova **no es reenvien sols**.
+
+## Més d'un worker (qui ha enviat què)
+Tots els workers comparteixen la mateixa cua. Cada un s'etiqueta amb `WORKER_ID`, i això queda a:
+- el `metadata` de l'auditoria (`workerId`), que és d'on el panell llegeix la columna **Worker** de l'historial;
+- el `Message-ID` del correu (`<uuid.WORKER_ID@domini>`), visible a les capçaleres del correu rebut.
+
+El panell mostra «Antic» per als correus tancats per un worker sense etiqueta (el de Railway o un local sense actualitzar) i «—» per als que encara no s'han tancat. **No es pot saber qui ha fet un intent fallit o un reintent**: només el resultat final queda registrat.
+
+**Risc d'un worker local amb llista blanca contra la BD compartida:** qualsevol correu que no sigui als seus destinataris permesos queda `CANCELAT` i no es reenvia sol. Per treballar en local, ús una BD de proves pròpia o no arrenquis cap worker local.
 
 ## Panell
 - Semàfor: 🟢 correcte · 🟠 atenció (retard >10 min, reintents, llista blanca activa, SMTP sense comprovar) · 🔴 problema (SMTP caigut, `FALLIT` en 24 h, motor mut, correu esperant >30 min). El nivell es veu per color, icona i text.
