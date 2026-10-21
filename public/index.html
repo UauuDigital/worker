@@ -45,20 +45,23 @@
 
     <main id="contingut">
       <section id="estat" class="estat estat--cap" aria-labelledby="estat-titol">
-        <div class="columna">
-          <div class="estat__cap">
-            <div id="estat-icona" class="estat__icona" aria-hidden="true"></div>
-            <div>
-              <h1 id="estat-titol" class="estat__titol">Carregant…</h1>
-              <p id="estat-subtitol" class="estat__subtitol"></p>
+        <div class="columna estat__fila">
+          <div class="estat__esquerra">
+            <div class="estat__cap">
+              <div id="estat-icona" class="estat__icona" aria-hidden="true"></div>
+              <div>
+                <h1 id="estat-titol" class="estat__titol">Carregant…</h1>
+                <p id="estat-subtitol" class="estat__subtitol"></p>
+              </div>
             </div>
+            <ul id="estat-motius" class="motius" hidden></ul>
           </div>
-          <ul id="estat-motius" class="motius" hidden></ul>
           <dl id="xifres" class="xifres"></dl>
         </div>
       </section>
 
-      <section class="columna llista" aria-labelledby="titol-llista">
+      <div class="columna cos">
+      <section class="llista" aria-labelledby="titol-llista">
         <h2 id="titol-llista" class="nomes-lector">Correus</h2>
         <div class="filtres">
           <div id="pastilles" class="pastilles" role="group" aria-label="Filtra per estat">
@@ -78,7 +81,7 @@
         </nav>
       </section>
 
-      <section class="columna">
+      <section class="costat">
         <details id="tecnic" class="tecnic">
           <summary>Estat tècnic</summary>
           <div class="tecnic__cos">
@@ -94,6 +97,7 @@
           </div>
         </details>
       </section>
+      </div>
     </main>
   </div>
 

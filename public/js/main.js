@@ -109,6 +109,13 @@ $('pag-anterior').addEventListener('click', () => { filtre.pagina = Math.max(1, 
 $('pag-seguent').addEventListener('click', () => { filtre.pagina += 1; carrega(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('vista-panell').hidden) carrega(); });
 
+// En pantalla ampla l'estat tècnic és una columna lateral: sempre oberta i sense botó de plegar.
+const ample = window.matchMedia('(min-width: 1000px)');
+const ajustaTecnic = () => { if (ample.matches) $('tecnic').open = true; };
+ample.addEventListener('change', ajustaTecnic);
+$('tecnic').querySelector('summary').addEventListener('click', (ev) => { if (ample.matches) ev.preventDefault(); });
+ajustaTecnic();
+
 (async function inicia() {
   try {
     await api.sessio();

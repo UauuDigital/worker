@@ -68,3 +68,15 @@
   .fila__detall { padding-left: 5.25rem; }
   .proces { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Pantalla ampla: l'estat tècnic és una columna lateral sempre oberta ── */
+@media (min-width: 1000px) {
+  .llista { padding-bottom: 3rem; }
+  .costat { position: sticky; top: 1rem; padding-top: 1.5rem; }
+  .tecnic { margin: 0; border-top: 0; border-left: 1px solid var(--linia); padding-left: 1.5rem; }
+  .tecnic summary { cursor: default; list-style: none; padding: 0 0 0.75rem; font-size: 1.0625rem; }
+  .tecnic summary::-webkit-details-marker { display: none; }
+  .tecnic summary:hover { text-decoration: none; }
+  .tecnic__cos { padding: 0; }
+  .proces { grid-template-columns: 1fr; }
+}

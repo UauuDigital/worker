@@ -54,3 +54,16 @@
   .estat__titol { font-size: 3rem; }
   .estat__icona { width: 3.75rem; height: 3.75rem; }
 }
+
+/* ── Pantalla ampla: la llista a l'esquerra i l'estat tècnic fix a la dreta ── */
+@media (min-width: 1000px) {
+  .columna { max-width: 78rem; padding: 0 2rem; }
+
+  .estat { padding: 2.75rem 0 2.25rem; }
+  .estat__fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: end; }
+  .xifres { margin: 0; flex-direction: column; gap: 0.25rem; align-items: flex-end; }
+  .xifres div { justify-content: flex-end; }
+  .xifres dd { font-size: 1.75rem; }
+
+  .cos { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 3rem; align-items: start; }
+}
