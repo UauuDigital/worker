@@ -50,6 +50,15 @@ input, select {
 
 .marca { margin: 0; font-family: var(--font-ui); font-weight: 700; letter-spacing: 0.18em; font-size: 0.8125rem; }
 .nota { margin: 0; color: var(--tinta-suau); font-size: 0.875rem; }
+
+.boto-text {
+  min-height: 2.5rem; padding: 0.25rem 0.75rem; font: inherit; font-weight: 600; cursor: pointer;
+  color: var(--fosc); background: transparent; border: 0; border-radius: var(--radi);
+  transition: background-color 160ms var(--corba), transform 160ms var(--corba);
+}
+.boto-text:hover { background: #0000000f; }
+.boto-text:active { transform: scale(0.97); }
+.boto-text:disabled { opacity: 0.5; cursor: not-allowed; }
 .error-text { margin: 0; color: var(--problema-text); font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) {

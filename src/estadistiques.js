@@ -96,14 +96,16 @@ function creaEstadistiques(bd, estat, config) {
 
   async function historial({ pagina = 1, estat: filtreEstat = null, cerca = '' } = {}) {
     const p = Math.max(1, Math.floor(Number(pagina)) || 1);
-    const estatValid = ESTATS.includes(filtreEstat) ? filtreEstat : null;
+    // Admet un o diversos estats separats per comes (p. ex. «PENDENT,ENVIANT»).
+    const triats = String(filtreEstat || '').split(',').filter((e) => ESTATS.includes(e));
+    const estatValid = triats.length ? triats : null;
     const text = String(cerca || '').trim().slice(0, 100);
     const patro = text ? `%${text.replace(/[\\%_]/g, '\\$&')}%` : null;
 
     // El worker que ha tancat el correu es llegeix de l'auditoria (metadata.workerId), sense cap taula nova.
     // Es busca per (targetType, targetId), que té índex, i després es filtra per correuId.
     const r = await bd.query(
-      `SELECT c."createdAt", c."destinatariEmail", c."assumpte", c."estat"::text AS "estat", c."intents", c."enviatAt",
+      `SELECT c."id", c."createdAt", c."destinatariEmail", c."assumpte", c."estat"::text AS "estat", c."intents", c."enviatAt",
               c."properIntentAt", c."bloquejatFins", c."darrerError", c."motiuCancelacio",
               a."workerId", (a."trobada" IS TRUE) AS "teAuditoria", count(*) OVER()::int AS "total"
        FROM "correus_cua" c
@@ -117,13 +119,14 @@ function creaEstadistiques(bd, estat, config) {
          ORDER BY l."createdAt" DESC
          LIMIT 1
        ) a ON true
-       WHERE ($1::text IS NULL OR c."estat"::text = $1) AND ($2::text IS NULL OR c."destinatariEmail" ILIKE $2)
+       WHERE ($1::text[] IS NULL OR c."estat"::text = ANY($1::text[])) AND ($2::text IS NULL OR c."destinatariEmail" ILIKE $2)
        ORDER BY c."createdAt" DESC, c."id" DESC
        LIMIT ${MIDA_PAGINA} OFFSET $3`,
       [estatValid, patro, (p - 1) * MIDA_PAGINA],
     );
 
     const files = r.rows.map((x) => ({
+      id: x.id,
       creatAt: x.createdAt.toISOString(),
       destinatari: x.destinatariEmail,
       assumpte: x.assumpte,

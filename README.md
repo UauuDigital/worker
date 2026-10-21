@@ -74,10 +74,11 @@ El panell mostra «Antic» per als correus tancats per un worker sense etiqueta 
 **Risc d'un worker local amb llista blanca contra la BD compartida:** qualsevol correu que no sigui als seus destinataris permesos queda `CANCELAT` i no es reenvia sol. Per treballar en local, ús una BD de proves pròpia o no arrenquis cap worker local.
 
 ## Panell
-- Semàfor: 🟢 correcte · 🟠 atenció (retard >10 min, reintents, llista blanca activa, SMTP sense comprovar) · 🔴 problema (SMTP caigut, `FALLIT` en 24 h, motor mut, correu esperant >30 min). El nivell es veu per color, icona i text.
-- Xifres, enviaments per hora, estat del procés i del SMTP, errors recents i historial paginat (50 per pàgina) amb filtre d'estat i cerca per destinatari.
-- Actualització cada 10 s. Si l'API no respon, el panell ho diu i indica de quan són les dades.
-- Cap botó modifica la cua ni envia correus; l'únic és «Comprovar SMTP ara» (només `verify()`).
+- **Dalt:** una frase d'estat (🟢 «Tot va bé» · 🟠 «Atenció» · 🔴 «Hi ha un problema»), amb color, icona i text. Els motius només surten quan no és verd. Retard >10 min, reintents, llista blanca o SMTP sense comprovar → taronja; SMTP caigut, fallits en 24 h, motor mut, correu esperant >30 min o «enviant» >7 min → vermell. A sota, tres números: enviats avui, pendents i fallits.
+- **Llista de correus** (pastilles Tots / Enviats / Pendents / Fallits i cerca per destinatari): dues línies per correu, amb una frase només quan hi ha alguna cosa a dir. En tocar un correu es veuen els intents, el worker i les dates.
+- **Estat tècnic** (plegat; s'obre sol si passa a vermell): worker, mode, SMTP, últim senyal de vida, errors recents, enviaments per hora i el botó «Comprovar SMTP ara» (només `verify()`).
+- Actualització cada 10 s sense animar-ho tot de nou. Si l'API no respon, el panell ho diu i indica de quan són les dades.
+- Cap botó modifica la cua ni envia correus.
 - Seguretat: sessió amb galeta `HttpOnly` + `SameSite=Strict` + `Secure`, límit d'intents al login, comparacions en temps constant, CSP estricta, `noindex`, HTTPS obligatori. Mai es llegeix ni es mostra el cos dels correus.
 
 ## Estructura del projecte

@@ -1,0 +1,70 @@
+/* ── Filtres ───────────────────────────────────────────────────────── */
+.llista { padding-top: 1.5rem; padding-bottom: 1rem; }
+.filtres { display: grid; gap: 0.75rem; margin-bottom: 0.5rem; }
+.pastilles { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.pastilla {
+  min-height: 2.5rem; padding: 0.25rem 1rem; font: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer;
+  color: var(--fosc); background: transparent; border: 1px solid #8996a1; border-radius: 999px;
+  transition: background-color 160ms var(--corba), transform 160ms var(--corba);
+}
+.pastilla:hover { background: #e3eaf0; }
+.pastilla:active { transform: scale(0.97); }
+.pastilla[aria-pressed='true'] { background: var(--fosc); color: #fff; border-color: var(--fosc); }
+.cerca { background: var(--paper); }
+
+/* ── Llista de correus (cada fila és desplegable) ─────────────────── */
+.items { list-style: none; margin: 0; padding: 0; }
+.items > li { border-bottom: 1px solid var(--linia); }
+.fila summary {
+  display: grid; grid-template-columns: 3.5rem 1fr auto; grid-template-areas: 'hora dest xip' 'hora assumpte assumpte' '. nota nota';
+  gap: 0.125rem 0.75rem; padding: 0.875rem 0.25rem; cursor: pointer; list-style: none; align-items: baseline;
+}
+.fila summary::-webkit-details-marker { display: none; }
+.fila summary:hover { background: #0000000a; }
+.fila__hora { grid-area: hora; font-size: 0.8125rem; color: var(--tinta-suau); font-variant-numeric: tabular-nums; line-height: 1.5rem; }
+.fila__dest { grid-area: dest; font-weight: 600; overflow-wrap: anywhere; }
+.fila__assumpte { grid-area: assumpte; color: var(--tinta-suau); overflow-wrap: anywhere; }
+.fila__nota { grid-area: nota; font-size: 0.9375rem; margin-top: 0.125rem; }
+.xip { grid-area: xip; padding: 0 0.5rem; border-radius: var(--radi); font-size: 0.8125rem; font-weight: 700; white-space: nowrap; }
+.xip--ENVIAT { background: var(--ok-fons); color: var(--ok-text); }
+.xip--PENDENT, .xip--ENVIANT { background: var(--atencio-fons); color: var(--atencio-text); }
+.xip--FALLIT { background: var(--problema-fons); color: var(--problema-text); }
+.xip--CANCELAT { background: var(--neutre-fons); color: var(--neutre-text); }
+.fila--FALLIT .fila__nota { color: var(--problema-text); }
+
+.fila__detall { margin: 0; padding: 0 0.25rem 1rem 4.25rem; display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; font-size: 0.875rem; }
+.fila__detall dt { color: var(--tinta-suau); }
+.fila__detall dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.buit { margin: 1.5rem 0; color: var(--tinta-suau); }
+.paginacio { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 0.75rem; }
+.paginacio .boto-text:disabled { visibility: hidden; }
+
+/* ── Estat tècnic: plegat per defecte ─────────────────────────────── */
+.tecnic { margin: 1rem 0 3rem; border-top: 1px solid var(--linia); }
+.tecnic summary { padding: 1rem 0.25rem; cursor: pointer; font-weight: 600; color: var(--fosc); }
+.tecnic summary:hover { text-decoration: underline; }
+.tecnic__cos { padding: 0 0.25rem 1rem; }
+.tecnic__subtitol { font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+.proces { margin: 0; display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+.proces dt { font-size: 0.8125rem; color: var(--tinta-suau); }
+.proces dd { margin: 0; font-weight: 600; }
+.proces dd small { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--tinta-suau); }
+.proces .alerta dd { color: var(--problema-text); }
+.accions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin-top: 1.25rem; }
+.errors { margin: 0; padding: 0; list-style: none; }
+.errors li { padding: 0.5rem 0; border-bottom: 1px solid var(--linia); font-size: 0.9375rem; }
+.errors time { display: block; font-size: 0.8125rem; color: var(--tinta-suau); font-variant-numeric: tabular-nums; }
+
+.ritme svg { width: 100%; height: 5rem; display: block; }
+.ritme .barra { fill: var(--fosc); }
+.ritme .barra--buida { fill: var(--linia); }
+.ritme-eix { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--tinta-suau); font-variant-numeric: tabular-nums; margin-top: 0.25rem; }
+
+@media (min-width: 768px) {
+  .filtres { grid-template-columns: auto 1fr; align-items: center; }
+  .fila summary { grid-template-columns: 4.5rem 1fr 1fr auto; grid-template-areas: 'hora dest assumpte xip' '. nota nota nota'; }
+  .fila__assumpte { text-align: left; }
+  .fila__detall { padding-left: 5.25rem; }
+  .proces { grid-template-columns: repeat(2, 1fr); }
+}

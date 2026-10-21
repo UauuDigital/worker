@@ -1,11 +1,10 @@
 // Orquestració del panell: sessió, actualització automàtica cada 10 s, filtres i accions.
 import { api, ErrorApi } from './api.js';
-import {
-  pintaSemafor, pintaSemaforSenseDades, pintaRitme, pintaXifres, pintaProces, pintaHistorial, mostraAvisConnexio,
-} from './vista.js';
+import { $ } from './dom.js';
+import { pintaEstat, pintaEstatSenseDades, pintaTecnic } from './vista-estat.js';
+import { pintaLlista, mostraAvisConnexio } from './vista-llista.js';
 import { formataHora } from './format.js';
 
-const $ = (id) => document.getElementById(id);
 const INTERVAL_MS = 10_000;
 
 const filtre = { pagina: 1, estat: '', cerca: '' };
@@ -26,22 +25,19 @@ function mostraLogin(missatge = '') {
 function mostraPanell() {
   $('vista-login').hidden = true;
   $('vista-panell').hidden = false;
-  carrega(true);
+  carrega();
   clearInterval(temporitzador);
   temporitzador = setInterval(() => { if (!document.hidden) carrega(); }, INTERVAL_MS);
 }
 
-// `anima`: només true en entrar o en canviar filtre/pàgina; el refresc automàtic repinta sense animar.
-async function carrega(anima = false) {
-  if (carregant) return;
+async function carrega() {
+  if (carregant) return undefined;
   carregant = true;
   try {
     const [estat, historial] = await Promise.all([api.estat(), api.historial(filtre)]);
-    pintaSemafor(estat);
-    pintaRitme(estat.perHora);
-    pintaXifres(estat.targetes);
-    pintaProces(estat);
-    pintaHistorial(historial, anima);
+    pintaEstat(estat);
+    pintaTecnic(estat);
+    pintaLlista(historial);
     ultimaCarregaOk = new Date().toISOString();
     mostraAvisConnexio('');
   } catch (err) {
@@ -49,7 +45,7 @@ async function carrega(anima = false) {
     // Si l'API no respon, ho diem clarament: les dades que es veuen poden estar desfasades.
     const quan = ultimaCarregaOk ? `Les dades són de les ${formataHora(ultimaCarregaOk)}.` : 'Encara no s’ha pogut carregar cap dada.';
     mostraAvisConnexio(`${err.message} ${quan}`);
-    if (!ultimaCarregaOk) pintaSemaforSenseDades();
+    if (!ultimaCarregaOk) pintaEstatSenseDades();
   } finally {
     carregant = false;
   }
@@ -95,16 +91,22 @@ $('boto-smtp').addEventListener('click', async () => {
   }
 });
 
+// Filtres: pastilles d'estat i cerca per destinatari.
+const canviaFiltre = () => { filtre.pagina = 1; carrega(); };
+$('pastilles').addEventListener('click', (ev) => {
+  const boto = ev.target.closest('.pastilla');
+  if (!boto) return;
+  for (const p of $('pastilles').children) p.setAttribute('aria-pressed', String(p === boto));
+  filtre.estat = boto.dataset.estat;
+  canviaFiltre();
+});
 let retard = null;
-const aplicaFiltres = () => { filtre.pagina = 1; carrega(true); };
-$('filtres').addEventListener('submit', (ev) => ev.preventDefault());
-$('filtre-estat').addEventListener('change', (ev) => { filtre.estat = ev.target.value; aplicaFiltres(); });
 $('filtre-cerca').addEventListener('input', (ev) => {
   clearTimeout(retard);
-  retard = setTimeout(() => { filtre.cerca = ev.target.value.trim(); aplicaFiltres(); }, 350);
+  retard = setTimeout(() => { filtre.cerca = ev.target.value.trim(); canviaFiltre(); }, 350);
 });
-$('pag-anterior').addEventListener('click', () => { filtre.pagina = Math.max(1, filtre.pagina - 1); carrega(true); });
-$('pag-seguent').addEventListener('click', () => { filtre.pagina += 1; carrega(true); });
+$('pag-anterior').addEventListener('click', () => { filtre.pagina = Math.max(1, filtre.pagina - 1); carrega(); });
+$('pag-seguent').addEventListener('click', () => { filtre.pagina += 1; carrega(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('vista-panell').hidden) carrega(); });
 
 (async function inicia() {

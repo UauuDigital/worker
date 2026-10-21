@@ -214,7 +214,7 @@ test('historial: el filtre i la cerca van com a paràmetres, mai concatenats al 
     await s.demana(`/api/historial?estat=FALLIT&cerca=${encodeURIComponent("x'; DROP TABLE correus_cua;--%_")}&pagina=3`, { headers: { Cookie: c } });
     const q = bd.consultes.find((x) => x.text.includes('OVER()'));
     assert.doesNotMatch(q.text, /DROP/);
-    assert.equal(q.params[0], 'FALLIT');
+    assert.deepEqual(q.params[0], ['FALLIT']);
     assert.match(q.params[1], /\\%\\_/);
     assert.equal(q.params[2], 100);
     await s.demana('/api/historial?estat=HACK', { headers: { Cookie: c } });
@@ -297,5 +297,16 @@ test('historial: la columna «worker» distingeix els etiquetats, els antics i e
     assert.deepEqual(h.files.map((f) => f.worker), ['servatica', 'antic', null]);
     const e = await (await s.demana('/api/estat', { headers: { Cookie: c } })).json();
     assert.equal(e.workerId, 'servatica');
+  } finally { await s.atura(); }
+});
+
+test('historial: «Pendents» agrupa PENDENT i ENVIANT; els estats desconeguts s’ignoren', async () => {
+  const bd = creaBdFalsa();
+  const s = await arrenca({ bd });
+  try {
+    const c = galeta(await s.login());
+    await s.demana('/api/historial?estat=PENDENT,ENVIANT,HACK', { headers: { Cookie: c } });
+    const q = bd.consultes.filter((x) => x.text.includes('OVER()')).pop();
+    assert.deepEqual(q.params[0], ['PENDENT', 'ENVIANT']);
   } finally { await s.atura(); }
 });
