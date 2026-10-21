@@ -63,6 +63,16 @@ test('semàfor: el límit de batec depèn del mode (2 min bucle, 15 min tick)', 
   assert.equal(r.calculaSemafor({ ...base, mode: 'tick', minutsDesDelBatec: 16 }).nivell, 'vermell');
 });
 
+test('semàfor: un correu massa estona en «enviant» avisa i explica la causa', () => {
+  const lent = r.calculaSemafor({ ...base, segonsEnviantMesAntic: 90 });
+  assert.equal(lent.nivell, 'taronja');
+  assert.match(lent.motius.join(' '), /altre worker actiu/);
+  assert.equal(r.calculaSemafor({ ...base, segonsEnviantMesAntic: 20 }).nivell, 'verd');
+  const penjat = r.calculaSemafor({ ...base, segonsEnviantMesAntic: 600 });
+  assert.equal(penjat.nivell, 'vermell');
+  assert.match(penjat.motius.join(' '), /s'ha aturat o s'ha penjat/);
+});
+
 test('semàfor: taronja per retard, reintents, llista blanca o SMTP sense comprovar', () => {
   assert.equal(r.calculaSemafor({ ...base, minutsPendentMesAntic: 15 }).nivell, 'taronja');
   assert.equal(r.calculaSemafor({ ...base, minutsPendentMesAntic: 40 }).nivell, 'vermell');

@@ -258,3 +258,25 @@ test('pàgina i fitxers estàtics: versió injectada, HTML sense caché llarga, 
     assert.equal((await s.demana('/api/estat')).headers.get('cache-control'), 'no-store');
   } finally { await s.atura(); }
 });
+
+test('historial: un correu «enviant» porta des de quan i quan es reprendrà; el resum en dona el temps', async () => {
+  const ara = Date.now();
+  const bd = creaBdFalsa({
+    resum: { enviant: 1, segonsEnviantMesAntic: 95 },
+    historial: [{ createdAt: new Date(ara - 120_000), destinatariEmail: 'a@exemple.com', assumpte: 'X', estat: 'ENVIANT', intents: 2, enviatAt: null,
+      properIntentAt: new Date(ara - 100_000), bloquejatFins: new Date(ara + 205_000), darrerError: 'Connection timeout', motiuCancelacio: null }],
+  });
+  const s = await arrenca({ bd });
+  try {
+    const c = galeta(await s.login());
+    const h = await (await s.demana('/api/historial', { headers: { Cookie: c } })).json();
+    const f = h.files[0];
+    assert.equal(f.estat, 'ENVIANT');
+    assert.equal(Math.round((ara - new Date(f.enviantDesAt).getTime()) / 1000), 95);
+    assert.ok(new Date(f.reprenAt).getTime() > ara);
+    const e = await (await s.demana('/api/estat', { headers: { Cookie: c } })).json();
+    assert.equal(e.targetes.segonsEnviantMesAntic, 95);
+    assert.equal(e.semafor.nivell, 'taronja');
+    assert.match(e.semafor.motius.join(' '), /«enviant» des de fa 95 segons/);
+  } finally { await s.atura(); }
+});

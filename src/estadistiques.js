@@ -1,6 +1,6 @@
 // Dades del panell: només SELECT sobre `correus_cua` (cap taula nova, cap escriptura).
 // Mai es llegeix `cosHtml` ni `cosText`.
-const { calculaSemafor } = require('./regles');
+const { calculaSemafor, BLOQUEIG_MINUTS } = require('./regles');
 const { tradueixErrorSmtp } = require('./missatges-error');
 
 const ESTATS = ['PENDENT', 'ENVIANT', 'ENVIAT', 'FALLIT', 'CANCELAT'];
@@ -20,6 +20,7 @@ const SQL_RESUM = `
     count(*) FILTER (WHERE "estat" = 'ENVIANT')::int AS "enviant",
     count(*) FILTER (WHERE "estat" = 'CANCELAT' AND "createdAt" >= ${ARA_UTC} - interval '24 hours')::int AS "cancelats24h",
     EXTRACT(EPOCH FROM (${ARA_UTC} - min("properIntentAt") FILTER (WHERE "estat" = 'PENDENT' AND "properIntentAt" <= ${ARA_UTC}))) / 60 AS "minutsPendentMesAntic",
+    EXTRACT(EPOCH FROM (${ARA_UTC} - (min("bloquejatFins") FILTER (WHERE "estat" = 'ENVIANT') - make_interval(mins => ${BLOQUEIG_MINUTS})))) AS "segonsEnviantMesAntic",
     max("enviatAt") FILTER (WHERE "estat" = 'ENVIAT') AS "ultimEnviatAt"
   FROM "correus_cua"`;
 
@@ -45,6 +46,7 @@ function creaEstadistiques(bd, estat, config) {
     const minutsPendentMesAntic = d.minutsPendentMesAntic === null ? null : Number(d.minutsPendentMesAntic);
     const minutsDesDelBatec = viu.ultimBatec ? (ara - viu.ultimBatec) / 60_000 : null;
     const fallits24h = f.rows[0].n;
+    const segonsEnviantMesAntic = d.segonsEnviantMesAntic === null ? null : Math.max(0, Number(d.segonsEnviantMesAntic));
 
     const semafor = calculaSemafor({
       mode: config.mode,
@@ -52,6 +54,7 @@ function creaEstadistiques(bd, estat, config) {
       fallits24h,
       minutsDesDelBatec,
       minutsPendentMesAntic,
+      segonsEnviantMesAntic,
       reintentant: d.reintentant,
       llistaBlancaActiva: config.llistaBlanca.length > 0,
     });
@@ -72,7 +75,7 @@ function creaEstadistiques(bd, estat, config) {
       targetes: {
         enviatsAvui: d.enviatsAvui, enviats24h: d.enviats24h, enviats7d: d.enviats7d,
         pendentsAra: d.pendentsAra, programats: d.programats, reintentant: d.reintentant, enviant: d.enviant,
-        fallits24h, cancelats24h: d.cancelats24h, minutsPendentMesAntic,
+        fallits24h, cancelats24h: d.cancelats24h, minutsPendentMesAntic, segonsEnviantMesAntic,
         ultimEnviatAt: d.ultimEnviatAt ? d.ultimEnviatAt.toISOString() : null,
       },
       proces: {
@@ -98,7 +101,7 @@ function creaEstadistiques(bd, estat, config) {
 
     const r = await bd.query(
       `SELECT "createdAt", "destinatariEmail", "assumpte", "estat"::text AS "estat", "intents", "enviatAt",
-              "properIntentAt", "darrerError", "motiuCancelacio", count(*) OVER()::int AS "total"
+              "properIntentAt", "bloquejatFins", "darrerError", "motiuCancelacio", count(*) OVER()::int AS "total"
        FROM "correus_cua"
        WHERE ($1::text IS NULL OR "estat"::text = $1) AND ($2::text IS NULL OR "destinatariEmail" ILIKE $2)
        ORDER BY "createdAt" DESC, "id" DESC
@@ -114,6 +117,9 @@ function creaEstadistiques(bd, estat, config) {
       intents: x.intents,
       enviatAt: x.enviatAt ? x.enviatAt.toISOString() : null,
       properIntentAt: x.properIntentAt ? x.properIntentAt.toISOString() : null,
+      // El bloqueig es posa en reservar (ara + 5 min): d'aquí es dedueix des de quan s'està enviant.
+      enviantDesAt: x.estat === 'ENVIANT' && x.bloquejatFins ? new Date(x.bloquejatFins.getTime() - BLOQUEIG_MINUTS * 60_000).toISOString() : null,
+      reprenAt: x.estat === 'ENVIANT' && x.bloquejatFins ? x.bloquejatFins.toISOString() : null,
       // L'error tècnic original no surt mai de la BD cap al navegador.
       motiu: x.estat === 'CANCELAT' ? x.motiuCancelacio : tradueixErrorSmtp(x.darrerError),
     }));

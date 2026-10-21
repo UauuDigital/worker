@@ -3,7 +3,7 @@ function creaBdFalsa(dades = {}) {
   const ara = Date.now();
   const resum = {
     enviatsAvui: 12, enviats24h: 31, enviats7d: 204, pendentsAra: 0, programats: 3, reintentant: 0, enviant: 0,
-    cancelats24h: 1, minutsPendentMesAntic: null, ultimEnviatAt: new Date(ara - 4 * 60_000),
+    cancelats24h: 1, minutsPendentMesAntic: null, segonsEnviantMesAntic: null, ultimEnviatAt: new Date(ara - 4 * 60_000),
     ...dades.resum,
   };
   const perHora = dades.perHora || Array.from({ length: 9 }, (_, i) => ({ hora: new Date(Math.floor((ara - i * 3_600_000) / 3_600_000) * 3_600_000), n: (i * 3) % 7 + 1 }));

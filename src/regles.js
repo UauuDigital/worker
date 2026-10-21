@@ -4,6 +4,9 @@ const MINUTS_BACKOFF = [1, 5, 30, 120, 360];
 const MS_ENTRE_ENVIAMENTS = 2100; // Microsoft 365: 30/min per bústia
 const MAX_INTENTS = 5;
 const BLOQUEIG_MINUTS = 5;
+// Un enviament normal dura pocs segons: a partir d'aquí es considera lent, i a partir d'aquí penjat.
+const ENVIANT_TARONJA_S = 60;
+const ENVIANT_VERMELL_S = 420;
 
 // Llista buida = tot permès. Accepta emails exactes o dominis amb @.
 function permesPerLlistaBlanca(email, llista) {
@@ -49,8 +52,11 @@ function calculaSemafor(d) {
   if (d.minutsDesDelBatec === null) vermell.push('El motor encara no ha donat cap senyal de vida.');
   else if (d.minutsDesDelBatec > limitBatecMin) vermell.push(`El motor no dona senyals de vida des de fa ${Math.floor(d.minutsDesDelBatec)} minuts.`);
   if (d.minutsPendentMesAntic !== null && d.minutsPendentMesAntic > 30) vermell.push(`Hi ha un correu esperant des de fa ${Math.floor(d.minutsPendentMesAntic)} minuts.`);
+  const enviant = d.segonsEnviantMesAntic ?? null;
+  if (enviant !== null && enviant > ENVIANT_VERMELL_S) vermell.push(`Hi ha un correu en estat «enviant» des de fa ${Math.floor(enviant / 60)} minuts: el procés que l'havia reservat s'ha aturat o s'ha penjat.`);
 
   if (d.minutsPendentMesAntic !== null && d.minutsPendentMesAntic > 10 && d.minutsPendentMesAntic <= 30) taronja.push(`Hi ha un correu esperant des de fa ${Math.floor(d.minutsPendentMesAntic)} minuts.`);
+  if (enviant !== null && enviant > ENVIANT_TARONJA_S && enviant <= ENVIANT_VERMELL_S) taronja.push(`Hi ha un correu «enviant» des de fa ${Math.floor(enviant)} segons. Un enviament normal dura pocs segons: el servidor de correu respon lent o hi ha un altre worker actiu competint per la cua.`);
   if (d.reintentant > 0) taronja.push(`${d.reintentant} correu(s) s'estan reintentant després d'un error temporal.`);
   if (d.llistaBlancaActiva) taronja.push("La llista blanca és activa: només s'envia als destinataris permesos.");
   if (d.verifyOk === null) taronja.push("Encara no s'ha comprovat el servidor de correu.");

@@ -94,6 +94,7 @@ export function pintaXifres(t) {
     dada('Últimes 24 h', String(t.enviats24h)),
     dada('Últims 7 dies', String(t.enviats7d)),
     dada('Pendents ara', String(t.pendentsAra), { petit: `${t.programats} programats per més endavant` }),
+    dada('Enviant ara', String(t.enviant), { petit: t.enviant > 0 && t.segonsEnviantMesAntic !== null ? `El més antic, des de fa ${durada(t.segonsEnviantMesAntic)}` : null, alerta: t.segonsEnviantMesAntic !== null && t.segonsEnviantMesAntic > 60 }),
     dada('Reintentant', String(t.reintentant)),
     dada('Fallits (24 h)', String(t.fallits24h), { alerta: t.fallits24h > 0 }),
     dada('Cancel·lats (24 h)', String(t.cancelats24h)),
@@ -121,6 +122,22 @@ export function pintaProces(d) {
   for (const e of p.errorsRecents) llista.append(el('li', {}, el('time', { text: formataDataHora(e.at) }), document.createTextNode(e.missatge)));
 }
 
+// Text de la columna «Detall»: explica en quin punt és el correu i per què, no només l'etiqueta d'estat.
+function detallFila(f) {
+  if (f.estat === 'ENVIANT') {
+    const des = f.enviantDesAt ? `Intent ${f.intents} en curs des de fa ${durada((Date.now() - new Date(f.enviantDesAt).getTime()) / 1000)}.` : `Intent ${f.intents} en curs.`;
+    const resta = f.reprenAt ? ` Un enviament normal dura pocs segons; si no acaba, es reprendrà a les ${formataHora(f.reprenAt)}.` : '';
+    return des + resta;
+  }
+  if (f.estat === 'PENDENT') {
+    const quan = f.properIntentAt ? formataDataHora(f.properIntentAt) : '';
+    if (f.intents > 0) return `Reintent ${f.intents + 1} programat per al ${quan}.${f.motiu ? ` Motiu de l'últim error: ${f.motiu}` : ''}`;
+    return new Date(f.properIntentAt).getTime() > Date.now() ? `Programat per al ${quan}.` : 'Esperant el seu torn a la cua.';
+  }
+  if (f.estat === 'ENVIAT' && f.enviatAt) return `Enviat ${formataDataHora(f.enviatAt)}`;
+  return f.motiu || '';
+}
+
 export function pintaHistorial(h) {
   const cos = $('historial');
   buida(cos);
@@ -136,7 +153,7 @@ export function pintaHistorial(h) {
       celda('Assumpte', document.createTextNode(f.assumpte)),
       celda('Estat', el('span', { class: `estat estat--${f.estat}`, text: ETIQUETA_ESTAT[f.estat] || f.estat })),
       celda('Intents', document.createTextNode(String(f.intents)), 'num'),
-      celda('Detall', document.createTextNode(f.motiu || (f.estat === 'ENVIAT' && f.enviatAt ? `Enviat ${formataDataHora(f.enviatAt)}` : ''))),
+      celda('Detall', document.createTextNode(detallFila(f))),
     );
     tr.style.animationDelay = `${Math.min(i, 12) * 15}ms`;
     cos.append(tr);
