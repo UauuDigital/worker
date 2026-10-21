@@ -26,12 +26,13 @@ function mostraLogin(missatge = '') {
 function mostraPanell() {
   $('vista-login').hidden = true;
   $('vista-panell').hidden = false;
-  carrega();
+  carrega(true);
   clearInterval(temporitzador);
   temporitzador = setInterval(() => { if (!document.hidden) carrega(); }, INTERVAL_MS);
 }
 
-async function carrega() {
+// `anima`: només true en entrar o en canviar filtre/pàgina; el refresc automàtic repinta sense animar.
+async function carrega(anima = false) {
   if (carregant) return;
   carregant = true;
   try {
@@ -40,7 +41,7 @@ async function carrega() {
     pintaRitme(estat.perHora);
     pintaXifres(estat.targetes);
     pintaProces(estat);
-    pintaHistorial(historial);
+    pintaHistorial(historial, anima);
     ultimaCarregaOk = new Date().toISOString();
     mostraAvisConnexio('');
   } catch (err) {
@@ -95,15 +96,15 @@ $('boto-smtp').addEventListener('click', async () => {
 });
 
 let retard = null;
-const aplicaFiltres = () => { filtre.pagina = 1; carrega(); };
+const aplicaFiltres = () => { filtre.pagina = 1; carrega(true); };
 $('filtres').addEventListener('submit', (ev) => ev.preventDefault());
 $('filtre-estat').addEventListener('change', (ev) => { filtre.estat = ev.target.value; aplicaFiltres(); });
 $('filtre-cerca').addEventListener('input', (ev) => {
   clearTimeout(retard);
   retard = setTimeout(() => { filtre.cerca = ev.target.value.trim(); aplicaFiltres(); }, 350);
 });
-$('pag-anterior').addEventListener('click', () => { filtre.pagina = Math.max(1, filtre.pagina - 1); carrega(); });
-$('pag-seguent').addEventListener('click', () => { filtre.pagina += 1; carrega(); });
+$('pag-anterior').addEventListener('click', () => { filtre.pagina = Math.max(1, filtre.pagina - 1); carrega(true); });
+$('pag-seguent').addEventListener('click', () => { filtre.pagina += 1; carrega(true); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('vista-panell').hidden) carrega(); });
 
 (async function inicia() {

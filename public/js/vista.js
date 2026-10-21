@@ -141,7 +141,7 @@ function detallFila(f) {
 
 const etiquetaWorker = (w) => (w === null ? '—' : w === 'antic' ? 'Antic (Railway o local sense actualitzar)' : w);
 
-export function pintaHistorial(h) {
+export function pintaHistorial(h, anima = true) {
   const cos = $('historial');
   buida(cos);
   h.files.forEach((f, i) => {
@@ -159,7 +159,10 @@ export function pintaHistorial(h) {
       celda('Worker', document.createTextNode(etiquetaWorker(f.worker))),
       celda('Detall', document.createTextNode(detallFila(f))),
     );
-    tr.style.animationDelay = `${Math.min(i, 12) * 15}ms`;
+    if (anima) {
+      tr.classList.add('entra');
+      tr.style.animationDelay = `${Math.min(i, 12) * 15}ms`;
+    }
     cos.append(tr);
   });
   $('historial-buit').hidden = h.files.length > 0;
