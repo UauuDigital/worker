@@ -33,6 +33,7 @@ Aplicació Node.js que consumeix la cua `correus_cua` del CRM i envia els correu
 | `MODE_WORKER` | `bucle` (per defecte) o `tick` |
 | `TICK_SECRET` | Secret (mín. 16 caràcters) per a `POST /api/tick`. Obligatori en mode `tick` |
 | `TICK_MAX_SEGONS` | Durada màxima d'un tick (25 per defecte) |
+| `LIMIT_DIARI_ENVIAMENTS` | Límit de destinataris per 24 h de la bústia (10000 per defecte). Només alimenta l'estimació de quota de l'«Estat tècnic» |
 | `PANELL_USUARI`, `PANELL_CONTRASENYA` | Accés al panell (contrasenya de 12 caràcters com a mínim) |
 | `WORKER_ID` | Nom d'aquest worker (p. ex. `servatica`, `local-marti`). Surt a l'historial del panell, a l'auditoria i al Message-ID. Per defecte, el nom de la màquina |
 | `PORT` | Port d'escolta (3000) |

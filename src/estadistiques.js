@@ -102,6 +102,7 @@ function creaEstadistiques(bd, estat, config) {
         enviatsAvui: d.enviatsAvui, enviats24h: d.enviats24h, enviats7d: d.enviats7d,
         pendentsAra: d.pendentsAra, programats: d.programats, reintentant: d.reintentant, enviant: d.enviant,
         totalEnviats: d.totalEnviats, totalPendents: d.totalPendents, totalFallits: d.totalFallits, totalCancelats: d.totalCancelats,
+        limitDiari: config.limitDiari ?? null,
         fallits24h, cancelats24h: d.cancelats24h, minutsPendentMesAntic, segonsEnviantMesAntic,
         ultimEnviatAt: d.ultimEnviatAt ? d.ultimEnviatAt.toISOString() : null,
       },

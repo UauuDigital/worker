@@ -35,7 +35,8 @@ function carregaConfig(env) {
   const port = enter(env.PORT, 3000);
   const smtpPort = enter(env.SMTP_PORT, 587);
   const tickMax = enter(env.TICK_MAX_SEGONS, 25);
-  for (const [nom, v] of [['PORT', port], ['SMTP_PORT', smtpPort], ['TICK_MAX_SEGONS', tickMax]]) {
+  const limitDiari = enter(env.LIMIT_DIARI_ENVIAMENTS, 10000);
+  for (const [nom, v] of [['PORT', port], ['SMTP_PORT', smtpPort], ['TICK_MAX_SEGONS', tickMax], ['LIMIT_DIARI_ENVIAMENTS', limitDiari]]) {
     if (!Number.isInteger(v) || v <= 0) errors.push(`${nom} ha de ser un nombre enter positiu.`);
   }
 
@@ -56,6 +57,8 @@ function carregaConfig(env) {
       mode,
       tickSecret: env.TICK_SECRET || null,
       tickMaxSegons: tickMax,
+      // Límit de destinataris per 24 h de la bústia (Microsoft 365). Només serveix per a l'estimació del panell.
+      limitDiari,
       panell: { usuari: env.PANELL_USUARI, contrasenya: env.PANELL_CONTRASENYA },
       // Identificador d'aquest worker: apareix a l'auditoria, al Message-ID i al panell.
       workerId: (env.WORKER_ID || os.hostname() || 'worker').replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 32),

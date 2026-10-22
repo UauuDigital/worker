@@ -69,6 +69,19 @@ const dada = (etiqueta, valor, petit = null, alerta = false) => {
   return el('div', alerta ? { class: 'alerta' } : {}, el('dt', { text: etiqueta }), dd);
 };
 
+// Estimació de la quota de Microsoft 365: només compta els correus d'aquest sistema (no els enviats des d'Outlook).
+function dadaQuota(t) {
+  if (!t.limitDiari) return dada('Quota diària (estimada)', `${t.enviats24h} enviats en 24 h`);
+  const queden = Math.max(0, t.limitDiari - t.enviats24h);
+  const nombre = (n) => n.toLocaleString('ca-ES');
+  return dada(
+    'Quota diària (estimada)',
+    `Queden uns ${nombre(queden)} de ${nombre(t.limitDiari)}`,
+    `${nombre(t.enviats24h)} enviats en 24 h. Aproximat: no compta els correus enviats fora d’aquest sistema.`,
+    queden < t.limitDiari * 0.1,
+  );
+}
+
 export function pintaTecnic(d, horaFiltrada = '') {
   const p = d.proces;
   const v = p.ultimVerify;
@@ -80,6 +93,7 @@ export function pintaTecnic(d, horaFiltrada = '') {
     dada('Servidor de correu (SMTP)', smtp, petitSmtp, v.ok === false),
     dada('Últim senyal de vida', p.ultimBatecAt ? fa(p.ultimBatecAt) : 'Cap', p.ultimBatecAt ? formataDataHora(p.ultimBatecAt) : null),
     dada('En marxa des de fa', durada(p.segonsEnMarxa)),
+    dadaQuota(d.targetes),
     dada('Cua', `${d.targetes.programats} programats, ${d.targetes.reintentant} reintentant, ${d.targetes.cancelats24h} cancel·lats (24 h)`),
   );
   const llista = $('errors');
