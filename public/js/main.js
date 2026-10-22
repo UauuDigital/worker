@@ -7,7 +7,7 @@ import { formataHora } from './format.js';
 
 const INTERVAL_MS = 10_000;
 
-const filtre = { pagina: 1, estat: '', cerca: '' };
+const filtre = { pagina: 1, estat: '', finestra: '', cerca: '' };
 let temporitzador = null;
 let ultimaCarregaOk = null;
 let carregant = false;
@@ -37,6 +37,7 @@ async function carrega() {
     const [estat, historial] = await Promise.all([api.estat(), api.historial(filtre)]);
     pintaEstat(estat);
     pintaTecnic(estat);
+    marcaFiltre();
     pintaLlista(historial);
     ultimaCarregaOk = new Date().toISOString();
     mostraAvisConnexio('');
@@ -91,15 +92,31 @@ $('boto-smtp').addEventListener('click', async () => {
   }
 });
 
-// Filtres: pastilles d'estat i cerca per destinatari.
-const canviaFiltre = () => { filtre.pagina = 1; carrega(); };
-$('pastilles').addEventListener('click', (ev) => {
-  const boto = ev.target.closest('.pastilla');
-  if (!boto) return;
-  for (const p of $('pastilles').children) p.setAttribute('aria-pressed', String(p === boto));
-  filtre.estat = boto.dataset.estat;
+// Filtres: estat (clicant les xifres de dalt) i cerca per destinatari.
+const NOMS_FILTRE = {
+  'ENVIAT|enviats-avui': 'enviats avui', 'PENDENT,ENVIANT|pendents-ara': 'pendents ara',
+  'FALLIT|fallits-24h': 'fallits de les últimes 24 h', 'CANCELAT|cancelats-24h': 'cancel·lats de les últimes 24 h',
+  'ENVIAT|': 'enviats (tots)', 'PENDENT,ENVIANT|': 'pendents (tots)', 'FALLIT|': 'fallits (tots)', 'CANCELAT|': 'cancel·lats (tots)',
+};
+const canviaFiltre = () => { filtre.pagina = 1; marcaFiltre(); carrega(); };
+function marcaFiltre() {
+  for (const b of $('xifres').querySelectorAll('[data-estat]')) {
+    const actiu = b.dataset.estat === filtre.estat && b.dataset.finestra === filtre.finestra;
+    b.setAttribute('aria-pressed', String(actiu));
+    b.classList.toggle('xifra--activa', actiu);
+  }
+  $('filtre-actiu').hidden = !filtre.estat;
+  $('filtre-actiu-text').textContent = filtre.estat ? `Només es mostren els ${NOMS_FILTRE[`${filtre.estat}|${filtre.finestra}`]}.` : '';
+}
+$('xifres').addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-estat]');
+  if (!b) return;
+  const igual = filtre.estat === b.dataset.estat && filtre.finestra === b.dataset.finestra;
+  filtre.estat = igual ? '' : b.dataset.estat;
+  filtre.finestra = igual ? '' : b.dataset.finestra;
   canviaFiltre();
 });
+$('filtre-treu').addEventListener('click', () => { filtre.estat = ''; filtre.finestra = ''; canviaFiltre(); });
 let retard = null;
 $('filtre-cerca').addEventListener('input', (ev) => {
   clearTimeout(retard);

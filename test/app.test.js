@@ -310,3 +310,16 @@ test('historial: «Pendents» agrupa PENDENT i ENVIANT; els estats desconeguts s
     assert.deepEqual(q.params[0], ['PENDENT', 'ENVIANT']);
   } finally { await s.atura(); }
 });
+
+test('historial: la finestra només admet valors coneguts i mai va concatenada amb text del client', async () => {
+  const bd = creaBdFalsa();
+  const s = await arrenca({ bd });
+  try {
+    const c = galeta(await s.login());
+    await s.demana('/api/historial?estat=ENVIAT&finestra=enviats-avui', { headers: { Cookie: c } });
+    await s.demana('/api/historial?estat=ENVIAT&finestra=1;DROP%20TABLE%20x', { headers: { Cookie: c } });
+    const q = bd.consultes.filter((x) => x.text.includes('OVER()'));
+    assert.ok(q[q.length - 2].text.includes('"enviatAt" >='), 'la finestra coneguda s’aplica');
+    assert.ok(!q[q.length - 1].text.includes('DROP'), 'una finestra desconeguda s’ignora');
+  } finally { await s.atura(); }
+});

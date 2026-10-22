@@ -20,11 +20,21 @@ function creaApp({ config, seguretat, estadistiques, motor, log }) {
 
   // Pàgina única: la versió (empremta dels fitxers de public/) s'injecta als enllaços
   // de CSS/JS perquè cada desplegament els faci nous (cache-busting).
-  const versio = process.env.APP_VERSION || cacheHeaders.fingerprint(PUBLIC);
-  const html = fs.readFileSync(path.join(PUBLIC, 'index.html'), 'utf8').replaceAll('__VERSIO__', versio);
+  // Es recalcula com a màxim cada 5 s: així un Pull a Plesk és visible sense reiniciar l'aplicació
+  // (si l'HTML quedés en memòria, serviria una pàgina vella amb JS nou).
+  let html = '';
+  let calculatA = 0;
+  const paginaActual = () => {
+    if (!html || Date.now() - calculatA > 5000) {
+      const versio = process.env.APP_VERSION || cacheHeaders.fingerprint(PUBLIC);
+      html = fs.readFileSync(path.join(PUBLIC, 'index.html'), 'utf8').replaceAll('__VERSIO__', versio);
+      calculatA = Date.now();
+    }
+    return html;
+  };
   const serveixPagina = (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    res.type('html').send(html);
+    res.type('html').send(paginaActual());
   };
   app.get(['/', '/index.html'], serveixPagina);
   app.get('/version.json', cacheHeaders.versionHandler(PUBLIC));
@@ -73,8 +83,8 @@ function creaApp({ config, seguretat, estadistiques, motor, log }) {
   });
   api.get('/historial', async (req, res, next) => {
     try {
-      const { pagina, estat, cerca } = req.query;
-      res.json({ ok: true, ...(await estadistiques.historial({ pagina, estat, cerca })) });
+      const { pagina, estat, cerca, finestra } = req.query;
+      res.json({ ok: true, ...(await estadistiques.historial({ pagina, estat, cerca, finestra: String(finestra || '') })) });
     } catch (err) { next(err); }
   });
   // Només verify(): no envia res ni toca la cua.

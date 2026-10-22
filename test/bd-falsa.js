@@ -2,7 +2,7 @@
 function creaBdFalsa(dades = {}) {
   const ara = Date.now();
   const resum = {
-    enviatsAvui: 12, enviats24h: 31, enviats7d: 204, pendentsAra: 0, programats: 3, reintentant: 0, enviant: 1,
+    enviatsAvui: 12, totalEnviats: 340, totalPendents: 4, totalFallits: 7, totalCancelats: 15, enviats24h: 31, enviats7d: 204, pendentsAra: 0, programats: 3, reintentant: 0, enviant: 1,
     cancelats24h: 1, minutsPendentMesAntic: null, segonsEnviantMesAntic: 40, ultimEnviatAt: new Date(ara - 4 * 60_000),
     ...dades.resum,
   };

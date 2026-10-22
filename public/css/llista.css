@@ -1,16 +1,8 @@
 /* ── Filtres ───────────────────────────────────────────────────────── */
 .llista { padding-top: 1.5rem; padding-bottom: 1rem; }
-.filtres { display: grid; gap: 0.75rem; margin-bottom: 0.5rem; }
-.pastilles { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.pastilla {
-  min-height: 2.5rem; padding: 0.25rem 1rem; font: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer;
-  color: var(--fosc); background: transparent; border: 1px solid #8996a1; border-radius: 999px;
-  transition: background-color 160ms var(--corba), transform 160ms var(--corba);
-}
-.pastilla:hover { background: #e3eaf0; }
-.pastilla:active { transform: scale(0.97); }
-.pastilla[aria-pressed='true'] { background: var(--fosc); color: #fff; border-color: var(--fosc); }
-.cerca { background: var(--paper); }
+.filtres { margin-bottom: 0.5rem; }
+.filtre-actiu { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0 0 0.25rem; font-size: 0.9375rem; }
+
 
 /* ── Llista de correus (cada fila és desplegable) ─────────────────── */
 .items { list-style: none; margin: 0; padding: 0; }
@@ -62,7 +54,6 @@
 .ritme-eix { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--tinta-suau); font-variant-numeric: tabular-nums; margin-top: 0.25rem; }
 
 @media (min-width: 768px) {
-  .filtres { grid-template-columns: auto 1fr; align-items: center; }
   .fila summary { grid-template-columns: 4.5rem 1fr 1fr auto; grid-template-areas: 'hora dest assumpte xip' '. nota nota nota'; }
   .fila__assumpte { text-align: left; }
   .fila__detall { padding-left: 5.25rem; }

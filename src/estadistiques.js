@@ -19,6 +19,10 @@ const SQL_RESUM = `
     count(*) FILTER (WHERE "estat" = 'PENDENT' AND "intents" > 0)::int AS "reintentant",
     count(*) FILTER (WHERE "estat" = 'ENVIANT')::int AS "enviant",
     count(*) FILTER (WHERE "estat" = 'CANCELAT' AND "createdAt" >= ${ARA_UTC} - interval '24 hours')::int AS "cancelats24h",
+    count(*) FILTER (WHERE "estat" = 'ENVIAT')::int AS "totalEnviats",
+    count(*) FILTER (WHERE "estat" IN ('PENDENT', 'ENVIANT'))::int AS "totalPendents",
+    count(*) FILTER (WHERE "estat" = 'FALLIT')::int AS "totalFallits",
+    count(*) FILTER (WHERE "estat" = 'CANCELAT')::int AS "totalCancelats",
     EXTRACT(EPOCH FROM (${ARA_UTC} - min("properIntentAt") FILTER (WHERE "estat" = 'PENDENT' AND "properIntentAt" <= ${ARA_UTC}))) / 60 AS "minutsPendentMesAntic",
     EXTRACT(EPOCH FROM (${ARA_UTC} - (min("bloquejatFins") FILTER (WHERE "estat" = 'ENVIANT') - make_interval(mins => ${BLOQUEIG_MINUTS})))) AS "segonsEnviantMesAntic",
     max("enviatAt") FILTER (WHERE "estat" = 'ENVIAT') AS "ultimEnviatAt"
@@ -33,6 +37,15 @@ const SQL_PER_HORA = `
   FROM "correus_cua"
   WHERE "estat" = 'ENVIAT' AND "enviatAt" >= ${ARA_UTC} - interval '24 hours'
   GROUP BY 1`;
+
+// Finestres del filtre: han de coincidir amb les condicions de les xifres de dalt (SQL_RESUM, SQL_FALLITS),
+// perquè en clicar una xifra la llista mostri exactament els correus que s'hi compten.
+const FINESTRES = {
+  'enviats-avui': `c."enviatAt" >= ${INICI_DIA_UTC}`,
+  'pendents-ara': `(c."estat"::text = 'ENVIANT' OR c."properIntentAt" <= ${ARA_UTC})`,
+  'fallits-24h': `c."properIntentAt" >= ${ARA_UTC} - interval '24 hours'`,
+  'cancelats-24h': `c."createdAt" >= ${ARA_UTC} - interval '24 hours'`,
+};
 
 const HORA_MS = 3_600_000;
 
@@ -76,6 +89,7 @@ function creaEstadistiques(bd, estat, config) {
       targetes: {
         enviatsAvui: d.enviatsAvui, enviats24h: d.enviats24h, enviats7d: d.enviats7d,
         pendentsAra: d.pendentsAra, programats: d.programats, reintentant: d.reintentant, enviant: d.enviant,
+        totalEnviats: d.totalEnviats, totalPendents: d.totalPendents, totalFallits: d.totalFallits, totalCancelats: d.totalCancelats,
         fallits24h, cancelats24h: d.cancelats24h, minutsPendentMesAntic, segonsEnviantMesAntic,
         ultimEnviatAt: d.ultimEnviatAt ? d.ultimEnviatAt.toISOString() : null,
       },
@@ -94,7 +108,9 @@ function creaEstadistiques(bd, estat, config) {
     };
   }
 
-  async function historial({ pagina = 1, estat: filtreEstat = null, cerca = '' } = {}) {
+  async function historial({ pagina = 1, estat: filtreEstat = null, cerca = '', finestra = '' } = {}) {
+    // Només es fa servir una finestra coneguda (mai text del client dins el SQL).
+    const condicioFinestra = Object.hasOwn(FINESTRES, finestra) ? ` AND ${FINESTRES[finestra]}` : '';
     const p = Math.max(1, Math.floor(Number(pagina)) || 1);
     // Admet un o diversos estats separats per comes (p. ex. «PENDENT,ENVIANT»).
     const triats = String(filtreEstat || '').split(',').filter((e) => ESTATS.includes(e));
@@ -119,7 +135,7 @@ function creaEstadistiques(bd, estat, config) {
          ORDER BY l."createdAt" DESC
          LIMIT 1
        ) a ON true
-       WHERE ($1::text[] IS NULL OR c."estat"::text = ANY($1::text[])) AND ($2::text IS NULL OR c."destinatariEmail" ILIKE $2)
+       WHERE ($1::text[] IS NULL OR c."estat"::text = ANY($1::text[])) AND ($2::text IS NULL OR c."destinatariEmail" ILIKE $2)${condicioFinestra}
        ORDER BY c."createdAt" DESC, c."id" DESC
        LIMIT ${MIDA_PAGINA} OFFSET $3`,
       [estatValid, patro, (p - 1) * MIDA_PAGINA],

@@ -32,10 +32,22 @@
 .motius { margin: 1rem 0 0; padding-left: 1.1rem; }
 .motius li + li { margin-top: 0.25rem; }
 
-.xifres { margin: 1.25rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; }
-.xifres div { display: flex; align-items: baseline; gap: 0.4rem; }
-.xifres dt { order: 2; font-size: 0.9375rem; }
-.xifres dd { margin: 0; order: 1; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* Les xifres són el filtre d'estat: cada una és un botó que ensenya el recompte i filtra la llista. */
+.xifres { margin: 1.25rem 0 0; display: grid; grid-template-columns: 1fr; gap: 0.375rem; }
+.xifres__fila { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); gap: 0.375rem; }
+.xifra--total { background: transparent; border-color: #00000026; }
+.xifra--total .xifra__n { font-size: 1.125rem; font-weight: 600; }
+.xifra {
+  display: flex; align-items: baseline; gap: 0.4rem; min-height: 2.75rem; padding: 0.25rem 0.75rem;
+  font: inherit; color: inherit; text-align: left; cursor: pointer; background: #ffffff59;
+  border: 2px solid transparent; border-radius: var(--radi);
+  transition: background-color 160ms var(--corba), border-color 160ms var(--corba);
+}
+.xifra:hover { background: #ffffff99; }
+.xifra--activa, .xifra--activa:hover { background: #ffffffd9; border-color: currentColor; }
+.xifra__n { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.xifra__t { font-size: 0.9375rem; }
+.xifra--activa .xifra__t { font-weight: 700; }
 
 .estat--verd { background: var(--ok-fons); color: var(--ok-text); }
 .estat--verd .estat__icona { color: var(--ok-icona); }
@@ -61,9 +73,8 @@
 
   .estat { padding: 2.75rem 0 2.25rem; }
   .estat__fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: end; }
-  .xifres { margin: 0; flex-direction: column; gap: 0.25rem; align-items: flex-end; }
-  .xifres div { justify-content: flex-end; }
-  .xifres dd { font-size: 1.75rem; }
+  .xifres { margin: 0; gap: 0.25rem; min-width: 24rem; }
+  .xifres__fila { grid-template-columns: 1.4fr 1fr; }
 
   .cos { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 3rem; align-items: start; }
 }

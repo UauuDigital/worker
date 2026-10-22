@@ -20,7 +20,13 @@ function icona(nivell) {
   return svg('svg', { viewBox: '0 0 64 64', focusable: 'false' }, contorn, marca);
 }
 
-const xifra = (valor, etiqueta) => el('div', {}, el('dt', { text: etiqueta }), el('dd', { text: String(valor) }));
+// Cada fila té dos botons que filtren la llista: el recompte recent (avui / 24 h) i el total de l'estat.
+// Tornar a clicar el botó actiu treu el filtre.
+const xifra = (valor, etiqueta, estat, finestra, total) => el('div', { class: 'xifres__fila' },
+  el('button', { type: 'button', class: 'xifra', 'data-estat': estat, 'data-finestra': finestra, 'aria-pressed': 'false' },
+    el('span', { class: 'xifra__n', text: String(valor) }), el('span', { class: 'xifra__t', text: etiqueta })),
+  el('button', { type: 'button', class: 'xifra xifra--total', 'data-estat': estat, 'data-finestra': '', 'aria-pressed': 'false' },
+    el('span', { class: 'xifra__n', text: String(total) }), el('span', { class: 'xifra__t', text: 'en total' })));
 
 export function pintaEstat(d) {
   const nivell = d.semafor.nivell;
@@ -37,9 +43,10 @@ export function pintaEstat(d) {
 
   const t = d.targetes;
   $('xifres').replaceChildren(
-    xifra(t.enviatsAvui, t.enviatsAvui === 1 ? 'enviat avui' : 'enviats avui'),
-    xifra(t.pendentsAra + t.enviant, 'pendents'),
-    xifra(t.fallits24h, 'fallits (24 h)'),
+    xifra(t.enviatsAvui, t.enviatsAvui === 1 ? 'enviat avui' : 'enviats avui', 'ENVIAT', 'enviats-avui', t.totalEnviats),
+    xifra(t.pendentsAra + t.enviant, 'pendents ara', 'PENDENT,ENVIANT', 'pendents-ara', t.totalPendents),
+    xifra(t.fallits24h, 'fallits (24 h)', 'FALLIT', 'fallits-24h', t.totalFallits),
+    xifra(t.cancelats24h, 'cancel·lats (24 h)', 'CANCELAT', 'cancelats-24h', t.totalCancelats),
   );
   $('avis-prova').hidden = !d.llistaBlanca.activa;
 
