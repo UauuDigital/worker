@@ -83,8 +83,8 @@ function creaApp({ config, seguretat, estadistiques, motor, log }) {
   });
   api.get('/historial', async (req, res, next) => {
     try {
-      const { pagina, estat, cerca, finestra } = req.query;
-      res.json({ ok: true, ...(await estadistiques.historial({ pagina, estat, cerca, finestra: String(finestra || '') })) });
+      const { pagina, estat, cerca, finestra, hora, dia } = req.query;
+      res.json({ ok: true, ...(await estadistiques.historial({ pagina, estat, cerca, finestra: String(finestra || ''), hora: String(hora || ''), dia: String(dia || '') })) });
     } catch (err) { next(err); }
   });
   // Només verify(): no envia res ni toca la cua.

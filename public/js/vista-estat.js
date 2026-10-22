@@ -7,7 +7,6 @@ const NIVELLS = {
   taronja: { titol: 'Atenció', classe: 'estat--taronja', forma: 'M32 22v14M32 43v2' },
   vermell: { titol: 'Hi ha un problema', classe: 'estat--vermell', forma: 'M23 23l18 18M41 23L23 41' },
 };
-const ETIQUETA_RESULTAT = { enviat: 'Correu enviat', cancelat: 'Correu cancel·lat', reintent: 'Reintent programat', fallit: 'Correu fallit' };
 let nivellAnterior = null;
 
 // El nivell es veu per color, per la forma de la icona (cercle, triangle, octàgon) i pel text.
@@ -70,7 +69,7 @@ const dada = (etiqueta, valor, petit = null, alerta = false) => {
   return el('div', alerta ? { class: 'alerta' } : {}, el('dt', { text: etiqueta }), dd);
 };
 
-export function pintaTecnic(d) {
+export function pintaTecnic(d, horaFiltrada = '') {
   const p = d.proces;
   const v = p.ultimVerify;
   const smtp = v.ok === null ? 'Encara no comprovat' : v.ok ? 'Correcte' : 'Ha fallat';
@@ -81,30 +80,43 @@ export function pintaTecnic(d) {
     dada('Servidor de correu (SMTP)', smtp, petitSmtp, v.ok === false),
     dada('Últim senyal de vida', p.ultimBatecAt ? fa(p.ultimBatecAt) : 'Cap', p.ultimBatecAt ? formataDataHora(p.ultimBatecAt) : null),
     dada('En marxa des de fa', durada(p.segonsEnMarxa)),
-    dada('Llista blanca', d.llistaBlanca.activa ? `Activa (${d.llistaBlanca.entrades})` : 'No activa'),
-    dada('Últim resultat', p.ultimResultat ? ETIQUETA_RESULTAT[p.ultimResultat.tipus] || 'Desconegut' : 'Cap', p.ultimResultat ? fa(p.ultimResultat.at) : null),
     dada('Cua', `${d.targetes.programats} programats, ${d.targetes.reintentant} reintentant, ${d.targetes.cancelats24h} cancel·lats (24 h)`),
   );
   const llista = $('errors');
   llista.replaceChildren(...(p.errorsRecents.length
     ? p.errorsRecents.map((e) => el('li', {}, el('time', { text: formataDataHora(e.at) }), document.createTextNode(e.missatge)))
     : [el('li', { text: 'Cap error recent.' })]));
-  pintaRitme(d.perHora);
+  pintaRitme(d.perHora, horaFiltrada);
 }
 
-function pintaRitme(perHora) {
+// Cada barra és un botó (zona transparent): clicar-la filtra la llista per aquella hora d'enviament (ho gestiona main.js).
+function pintaRitme(perHora, horaFiltrada) {
   const ample = 240;
   const alt = 80;
   const maxim = Math.max(1, ...perHora.map((p) => p.n));
   const pas = ample / perHora.length;
+  const text = (p) => `${formataHoraCurta(p.hora)} h: ${p.n} ${p.n === 1 ? 'correu enviat' : 'correus enviats'}`;
+  const info = el('div', { class: 'ritme-info', role: 'status', hidden: '' });
+  const amaga = () => { info.hidden = true; };
   const grafic = svg('svg', { viewBox: `0 0 ${ample} ${alt}`, role: 'img', preserveAspectRatio: 'none', 'aria-label': 'Correus enviats cada hora durant les últimes 24 hores' });
   perHora.forEach((p, i) => {
     const h = p.n === 0 ? 2 : Math.max(3, (p.n / maxim) * alt);
-    const barra = svg('rect', { x: i * pas + 1, y: alt - h, width: pas - 2, height: h, class: p.n === 0 ? 'barra barra--buida' : 'barra' });
-    barra.append(svg('title', {}, document.createTextNode(`${formataHoraCurta(p.hora)} h: ${p.n} enviats`)));
-    grafic.append(barra);
+    const barra = svg('rect', { x: i * pas + 1, y: alt - h, width: pas - 2, height: h, class: `${p.n === 0 ? 'barra barra--buida' : 'barra'}${p.hora === horaFiltrada ? ' barra--activa' : ''}` });
+    // Zona transparent d'alçada completa: fa que també es pugui apuntar les barres buides o molt baixes.
+    const zona = svg('rect', { x: i * pas, y: 0, width: pas, height: alt, class: 'zona', tabindex: 0, role: 'button', 'aria-pressed': String(p.hora === horaFiltrada), 'data-hora': p.hora, 'aria-label': text(p) });
+    const mostra = () => {
+      info.textContent = text(p);
+      info.style.left = `${((i + 0.5) / perHora.length) * 100}%`;
+      info.hidden = false;
+    };
+    zona.addEventListener('pointerenter', mostra);
+    zona.addEventListener('pointerdown', mostra);
+    zona.addEventListener('focus', mostra);
+    zona.addEventListener('pointerleave', amaga);
+    zona.addEventListener('blur', amaga);
+    grafic.append(barra, zona);
   });
   const eix = el('div', { class: 'ritme-eix', 'aria-hidden': 'true' });
   for (const i of [0, 6, 12, 18, 23]) eix.append(el('span', { text: `${formataHoraCurta(perHora[i].hora)} h` }));
-  $('ritme').replaceChildren(grafic, eix);
+  $('ritme').replaceChildren(grafic, eix, info);
 }

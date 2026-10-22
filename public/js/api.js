@@ -37,9 +37,11 @@ export const api = {
   login: (usuari, contrasenya) => peticio('/api/login', enviaJson({ usuari, contrasenya })),
   logout: () => peticio('/api/logout', enviaJson()),
   estat: () => peticio('/api/estat'),
-  historial: ({ pagina, estat, cerca, finestra }) => {
+  historial: ({ pagina, estat, cerca, finestra, hora, dia }) => {
     const p = new URLSearchParams({ pagina: String(pagina) });
     if (estat) p.set('estat', estat);
+    if (hora) p.set('hora', hora);
+    if (dia) p.set('dia', dia);
     if (finestra) p.set('finestra', finestra);
     if (cerca) p.set('cerca', cerca);
     return peticio(`/api/historial?${p}`);

@@ -44,13 +44,49 @@
 .proces dd small { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--tinta-suau); }
 .proces .alerta dd { color: var(--problema-text); }
 .accions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin-top: 1.25rem; }
+/* Les xifres, dins la columna dreta, sobre fons clar (a la banda d'estat van sobre el color de l'estat). */
+.xifres-dreta { margin-top: 1rem; }
+.tecnic .xifres { margin: 0; min-width: 0; gap: 0; border-top: 1px solid var(--linia); }
+.tecnic .xifres__fila { grid-template-columns: minmax(0, 1fr) auto; gap: 0.25rem; align-items: center; padding: 0.125rem 0; border-bottom: 1px solid var(--linia); }
+.tecnic .xifra { min-height: 2.5rem; padding: 0.25rem 0.5rem; gap: 0.5rem; background: none; border: 0; color: var(--tinta); }
+.tecnic .xifra:hover { background: #e8eef4; }
+.tecnic .xifra__n { font-size: 1.25rem; min-width: 2.25ch; }
+.tecnic .xifra__t { font-size: 0.8125rem; color: var(--tinta-suau); }
+.tecnic .xifra--total { justify-content: flex-end; background: none; }
+.tecnic .xifra--total .xifra__n { font-size: 0.9375rem; font-weight: 600; color: var(--tinta-suau); }
+.tecnic .xifra--activa, .tecnic .xifra--activa:hover { background: #d5e3f0; }
+.tecnic .xifra--activa .xifra__n { color: var(--focus); }
+.tecnic .xifra--activa .xifra__t { color: var(--tinta); font-weight: 700; }
+.accions + .proces { margin-top: 1.25rem; }
 .errors { margin: 0; padding: 0; list-style: none; }
 .errors li { padding: 0.5rem 0; border-bottom: 1px solid var(--linia); font-size: 0.9375rem; }
 .errors time { display: block; font-size: 0.8125rem; color: var(--tinta-suau); font-variant-numeric: tabular-nums; }
 
+.ritme { position: relative; }
 .ritme svg { width: 100%; height: 5rem; display: block; }
 .ritme .barra { fill: var(--fosc); }
+.ritme .zona { fill: transparent; outline: none; }
+.ritme .zona:hover, .ritme .zona:focus-visible { fill: var(--linia); opacity: 0.5; }
+.ritme-info { position: absolute; bottom: calc(100% - 0.25rem); transform: translateX(-50%); padding: 0.25rem 0.5rem; background: var(--fosc); color: #fff; font-size: 0.8125rem; line-height: 1.3; white-space: nowrap; pointer-events: none; border-radius: 0.25rem; font-variant-numeric: tabular-nums; z-index: 1; }
+.ritme-info[hidden] { display: none; }
 .ritme .barra--buida { fill: var(--linia); }
+.ritme .zona { cursor: pointer; }
+.ritme .zona[aria-pressed='true'] { fill: var(--linia); opacity: 0.5; }
+.ritme .barra--activa { fill: var(--focus); }
+.calendari { position: relative; }
+.tecnic__subtitol--primer { margin-top: 0; }
+.calendari__cap { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.125rem; font-size: 0.875rem; }
+.calendari__cap .boto-text:disabled { visibility: hidden; }
+.calendari__graella { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.dia { display: grid; place-items: center; height: 1.5rem; font: inherit; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--tinta-suau); border: 0; border-radius: var(--radi); background: none; }
+.dia--setmana { height: auto; padding-bottom: 0.125rem; }
+.dia--avui { box-shadow: inset 0 0 0 1px var(--tinta-suau); }
+.dia--amb { cursor: pointer; font-weight: 700; color: var(--tinta); background: #d5e3f0; transition: background-color 160ms var(--corba), transform 160ms var(--corba); }
+.dia--amb:hover { background: #bcd3e8; }
+.dia--amb:active { transform: scale(0.94); }
+.dia--amb[aria-pressed='true'] { background: var(--focus); color: #fff; }
+.calendari-info { position: absolute; transform: translate(-50%, -100%); padding: 0.25rem 0.5rem; background: var(--fosc); color: #fff; font-size: 0.8125rem; line-height: 1.3; white-space: nowrap; pointer-events: none; border-radius: 0.25rem; z-index: 1; }
+.calendari-info[hidden] { display: none; }
 .ritme-eix { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--tinta-suau); font-variant-numeric: tabular-nums; margin-top: 0.25rem; }
 
 @media (min-width: 768px) {

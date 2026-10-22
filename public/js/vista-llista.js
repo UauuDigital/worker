@@ -29,9 +29,9 @@ function nota(f) {
 const etiquetaWorker = (w) => (w === null ? '—' : w === 'antic' ? 'Antic (Railway o local sense actualitzar)' : w);
 const parell = (dt, dd) => [el('dt', { text: dt }), el('dd', { text: dd })];
 
-function fila(f, oberts) {
+function fila(f, oberts, perEnviament) {
   const resum = el('summary', {},
-    el('span', { class: 'fila__hora', text: horaLlista(f.creatAt) }),
+    el('span', { class: 'fila__hora', text: horaLlista(perEnviament && f.enviatAt ? f.enviatAt : f.creatAt) }),
     el('span', { class: 'fila__dest', text: f.destinatari }),
     el('span', { class: `xip xip--${f.estat}`, text: ETIQUETA_ESTAT[f.estat] || f.estat }),
     el('span', { class: 'fila__assumpte', text: f.assumpte }),
@@ -51,9 +51,10 @@ function fila(f, oberts) {
 }
 
 // El refresc automàtic repinta les files però conserva les que l'usuari tenia desplegades.
-export function pintaLlista(h) {
+// Amb el filtre d'hora actiu, la primera columna mostra l'hora d'enviament (no la de creació).
+export function pintaLlista(h, perEnviament = false) {
   const oberts = new Set([...document.querySelectorAll('#llista details[open]')].map((d) => d.dataset.id));
-  $('llista').replaceChildren(...h.files.map((f) => fila(f, oberts)));
+  $('llista').replaceChildren(...h.files.map((f) => fila(f, oberts, perEnviament)));
   $('llista-buida').hidden = h.files.length > 0;
   $('pag-info').textContent = h.pagines > 1 ? `Pàgina ${h.pagina} de ${h.pagines}` : `${h.total} correus`;
   $('pag-anterior').disabled = h.pagina <= 1;

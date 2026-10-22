@@ -68,7 +68,7 @@
         </div>
         <p id="filtre-actiu" class="filtre-actiu" hidden>
           <span id="filtre-actiu-text"></span>
-          <button id="filtre-treu" type="button" class="boto-text">Mostra tots</button>
+          <button id="filtre-treu" type="button" class="boto-text">Treu els filtres</button>
         </p>
         <ul id="llista" class="items"></ul>
         <p id="llista-buida" class="buit" hidden>Cap correu coincideix amb aquest filtre.</p>
@@ -83,15 +83,18 @@
         <details id="tecnic" class="tecnic">
           <summary>Estat tècnic</summary>
           <div class="tecnic__cos">
-            <dl id="proces" class="proces"></dl>
+            <h2 class="tecnic__subtitol tecnic__subtitol--primer">Correus per dia</h2>
+            <div id="calendari" class="calendari"></div>
+            <h2 class="tecnic__subtitol">Enviaments per hora (últimes 24 h)</h2>
+            <div id="ritme" class="ritme"></div>
+            <div id="xifres-dreta" class="xifres-dreta"></div>
             <div class="accions">
               <button id="boto-smtp" type="button" class="boto">Comprovar SMTP ara</button>
               <p id="resultat-smtp" class="nota" role="status"></p>
             </div>
+            <dl id="proces" class="proces"></dl>
             <h2 class="tecnic__subtitol">Errors recents</h2>
             <ul id="errors" class="errors"></ul>
-            <h2 class="tecnic__subtitol">Enviaments per hora (últimes 24 h)</h2>
-            <div id="ritme" class="ritme"></div>
           </div>
         </details>
       </section>

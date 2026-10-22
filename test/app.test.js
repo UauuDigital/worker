@@ -311,6 +311,44 @@ test('historial: «Pendents» agrupa PENDENT i ENVIANT; els estats desconeguts s
   } finally { await s.atura(); }
 });
 
+test('historial: l’hora es normalitza a l’inici de l’hora i va com a paràmetre; una hora invàlida s’ignora', async () => {
+  const bd = creaBdFalsa();
+  const s = await arrenca({ bd });
+  try {
+    const c = galeta(await s.login());
+    await s.demana('/api/historial?hora=2026-10-22T14:37:12.000Z', { headers: { Cookie: c } });
+    await s.demana("/api/historial?hora=1'; DROP TABLE x;--", { headers: { Cookie: c } });
+    const q = bd.consultes.filter((x) => x.text.includes('OVER()'));
+    assert.equal(q[q.length - 2].params[3], '2026-10-22 14:00:00');
+    assert.equal(q[q.length - 1].params[3], null);
+    assert.doesNotMatch(q[q.length - 1].text, /DROP/);
+  } finally { await s.atura(); }
+});
+
+test('historial: el dia va com a paràmetre, no limita l’estat i un dia invàlid s’ignora', async () => {
+  const bd = creaBdFalsa();
+  const s = await arrenca({ bd });
+  try {
+    const c = galeta(await s.login());
+    for (const dia of ['2026-10-22', '2026-13-45', "x'; DROP TABLE y;--"]) await s.demana(`/api/historial?dia=${encodeURIComponent(dia)}`, { headers: { Cookie: c } });
+    const q = bd.consultes.filter((x) => x.text.includes('OVER()'));
+    assert.deepEqual(q.map((x) => x.params[4]), ['2026-10-22', null, null]);
+    assert.doesNotMatch(q[2].text, /DROP/);
+    assert.doesNotMatch(q[0].text, /'ENVIAT'/, 'surten tots els estats, no només els enviats');
+  } finally { await s.atura(); }
+});
+
+test('estat: porta els correus per dia per al calendari', async () => {
+  const bd = creaBdFalsa();
+  const s = await arrenca({ bd });
+  try {
+    const c = galeta(await s.login());
+    const d = await (await s.demana('/api/estat', { headers: { Cookie: c } })).json();
+    assert.ok(Array.isArray(d.perDia));
+    assert.equal(d.diesCalendari, 120);
+  } finally { await s.atura(); }
+});
+
 test('historial: la finestra només admet valors coneguts i mai va concatenada amb text del client', async () => {
   const bd = creaBdFalsa();
   const s = await arrenca({ bd });

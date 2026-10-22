@@ -3,6 +3,9 @@ const dataHora = new Intl.DateTimeFormat('ca-ES', { dateStyle: 'short', timeStyl
 const hora = new Intl.DateTimeFormat('ca-ES', { timeStyle: 'medium', timeZone: 'Europe/Madrid' });
 const horaCurta = new Intl.DateTimeFormat('ca-ES', { hour: '2-digit', timeZone: 'Europe/Madrid' });
 
+const diaCurt = new Intl.DateTimeFormat('ca-ES', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Madrid' });
+
+export const formataDiaCurt = (iso) => diaCurt.format(new Date(iso));
 export const formataDataHora = (iso) => (iso ? dataHora.format(new Date(iso)) : '—');
 export const formataHora = (iso) => (iso ? hora.format(new Date(iso)) : '—');
 export const formataHoraCurta = (iso) => horaCurta.format(new Date(iso));

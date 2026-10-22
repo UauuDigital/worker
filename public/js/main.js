@@ -3,11 +3,12 @@ import { api, ErrorApi } from './api.js';
 import { $ } from './dom.js';
 import { pintaEstat, pintaEstatSenseDades, pintaTecnic } from './vista-estat.js';
 import { pintaLlista, mostraAvisConnexio } from './vista-llista.js';
-import { formataHora } from './format.js';
+import { pintaCalendari } from './vista-calendari.js';
+import { formataHora, formataHoraCurta, formataDiaCurt } from './format.js';
 
 const INTERVAL_MS = 10_000;
 
-const filtre = { pagina: 1, estat: '', finestra: '', cerca: '' };
+const filtre = { pagina: 1, estat: '', finestra: '', cerca: '', hora: '', dia: '' };
 let temporitzador = null;
 let ultimaCarregaOk = null;
 let carregant = false;
@@ -36,9 +37,10 @@ async function carrega() {
   try {
     const [estat, historial] = await Promise.all([api.estat(), api.historial(filtre)]);
     pintaEstat(estat);
-    pintaTecnic(estat);
+    pintaTecnic(estat, filtre.hora);
+    pintaCalendari(estat.perDia, estat.diesCalendari, filtre.dia);
     marcaFiltre();
-    pintaLlista(historial);
+    pintaLlista(historial, Boolean(filtre.hora || filtre.dia));
     ultimaCarregaOk = new Date().toISOString();
     mostraAvisConnexio('');
   } catch (err) {
@@ -105,8 +107,14 @@ function marcaFiltre() {
     b.setAttribute('aria-pressed', String(actiu));
     b.classList.toggle('xifra--activa', actiu);
   }
-  $('filtre-actiu').hidden = !filtre.estat;
-  $('filtre-actiu-text').textContent = filtre.estat ? `Només es mostren els ${NOMS_FILTRE[`${filtre.estat}|${filtre.finestra}`]}.` : '';
+  // El botó «Treu els filtres» apareix mentre hi hagi qualsevol filtre actiu (estat, hora o cerca).
+  const parts = [];
+  if (filtre.estat) parts.push(`els ${NOMS_FILTRE[`${filtre.estat}|${filtre.finestra}`]}`);
+  if (filtre.hora) parts.push(`els correus del ${formataDiaCurt(filtre.hora)} a les ${formataHoraCurta(filtre.hora)} h`);
+  if (filtre.dia) parts.push(`els correus del ${filtre.dia.split('-').reverse().join('/')}`);
+  if (filtre.cerca) parts.push(`destinataris que contenen «${filtre.cerca}»`);
+  $('filtre-actiu').hidden = !parts.length;
+  $('filtre-actiu-text').textContent = parts.length ? `Només es mostren ${parts.join(' · ')}.` : '';
 }
 $('xifres').addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-estat]');
@@ -116,8 +124,32 @@ $('xifres').addEventListener('click', (ev) => {
   filtre.finestra = igual ? '' : b.dataset.finestra;
   canviaFiltre();
 });
-$('filtre-treu').addEventListener('click', () => { filtre.estat = ''; filtre.finestra = ''; canviaFiltre(); });
+// Clicar una barra de la gràfica (hora) o un dia del calendari filtra la llista per aquell moment; tornar-hi a clicar treu el filtre.
+// Surten tots els correus d'aquell moment, sigui quin sigui l'estat (es combina amb el d'estat i la cerca).
+// Hora i dia són excloents entre ells: l'últim que es tria substitueix l'altre.
+function triaMoment(camp, valor) {
+  const nou = filtre[camp] === valor ? '' : valor;
+  Object.assign(filtre, { hora: '', dia: '', [camp]: nou });
+  canviaFiltre();
+}
+for (const [id, camp] of [['ritme', 'hora'], ['calendari', 'dia']]) {
+  $(id).addEventListener('click', (ev) => {
+    const zona = ev.target.closest(`[data-${camp}]`);
+    if (zona) triaMoment(camp, zona.dataset[camp]);
+  });
+}
+// La gràfica té zones enfocables (role=button): Enter i espai les activen igual que el clic.
+$('ritme').addEventListener('keydown', (ev) => {
+  const zona = ev.target.closest('[data-hora]');
+  if (zona && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); triaMoment('hora', zona.dataset.hora); }
+});
 let retard = null;
+$('filtre-treu').addEventListener('click', () => {
+  clearTimeout(retard);
+  Object.assign(filtre, { estat: '', finestra: '', hora: '', dia: '', cerca: '' });
+  $('filtre-cerca').value = '';
+  canviaFiltre();
+});
 $('filtre-cerca').addEventListener('input', (ev) => {
   clearTimeout(retard);
   retard = setTimeout(() => { filtre.cerca = ev.target.value.trim(); canviaFiltre(); }, 350);
@@ -128,7 +160,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && !$
 
 // En pantalla ampla l'estat tècnic és una columna lateral: sempre oberta i sense botó de plegar.
 const ample = window.matchMedia('(min-width: 1000px)');
-const ajustaTecnic = () => { if (ample.matches) $('tecnic').open = true; };
+// Les xifres (filtre d'estat) viuen a la banda d'estat; en pantalla ampla passen a la columna dreta, sota la gràfica.
+const colocaXifres = () => (ample.matches ? $('xifres-dreta') : $('estat').querySelector('.estat__fila')).append($('xifres'));
+const ajustaTecnic = () => { if (ample.matches) $('tecnic').open = true; colocaXifres(); };
 ample.addEventListener('change', ajustaTecnic);
 $('tecnic').querySelector('summary').addEventListener('click', (ev) => { if (ample.matches) ev.preventDefault(); });
 ajustaTecnic();

@@ -38,6 +38,18 @@ const SQL_PER_HORA = `
   WHERE "estat" = 'ENVIAT' AND "enviatAt" >= ${ARA_UTC} - interval '24 hours'
   GROUP BY 1`;
 
+// Data d'activitat d'un correu: quan es va enviar, i si encara no s'ha enviat, quan es va crear.
+// Serveix per als filtres per hora i per dia (i el calendari), de manera que hi surten tots els estats.
+const DATA_ACTIVITAT = 'COALESCE("enviatAt", "createdAt")';
+const DIES_CALENDARI = 120;
+
+// Correus per dia de Madrid (data d'activitat), per marcar el calendari.
+const SQL_PER_DIA = `
+  SELECT to_char(${DATA_ACTIVITAT} AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD') AS "dia", count(*)::int AS "n"
+  FROM "correus_cua"
+  WHERE ${DATA_ACTIVITAT} >= ${ARA_UTC} - interval '${DIES_CALENDARI} days'
+  GROUP BY 1`;
+
 // Finestres del filtre: han de coincidir amb les condicions de les xifres de dalt (SQL_RESUM, SQL_FALLITS),
 // perquè en clicar una xifra la llista mostri exactament els correus que s'hi compten.
 const FINESTRES = {
@@ -51,7 +63,7 @@ const HORA_MS = 3_600_000;
 
 function creaEstadistiques(bd, estat, config) {
   async function resum() {
-    const [r, f, h] = await Promise.all([bd.query(SQL_RESUM), bd.query(SQL_FALLITS), bd.query(SQL_PER_HORA)]);
+    const [r, f, h, dies] = await Promise.all([bd.query(SQL_RESUM), bd.query(SQL_FALLITS), bd.query(SQL_PER_HORA), bd.query(SQL_PER_DIA)]);
     const d = r.rows[0];
     const viu = estat.instantani();
     const ara = estat.ara();
@@ -105,10 +117,20 @@ function creaEstadistiques(bd, estat, config) {
         errorsRecents: viu.errorsRecents.slice(0, 5).map((e) => ({ at: new Date(e.at).toISOString(), missatge: e.missatge })),
       },
       perHora,
+      perDia: dies.rows.map((x) => ({ dia: x.dia, n: x.n })).sort((a, b) => (a.dia < b.dia ? -1 : 1)),
+      diesCalendari: DIES_CALENDARI,
     };
   }
 
-  async function historial({ pagina = 1, estat: filtreEstat = null, cerca = '', finestra = '' } = {}) {
+  async function historial({ pagina = 1, estat: filtreEstat = null, cerca = '', finestra = '', hora = '', dia = '' } = {}) {
+    // Hora (una barra de la gràfica): es normalitza a l'inici de l'hora UTC i va com a paràmetre.
+    const msHora = hora ? new Date(String(hora)).getTime() : NaN;
+    const horaInici = Number.isNaN(msHora) ? null : new Date(Math.floor(msHora / HORA_MS) * HORA_MS).toISOString().slice(0, 19).replace('T', ' ');
+    // Dia (del calendari): AAAA-MM-DD d'un dia real; si no, s'ignora.
+    const diaText = String(dia || '');
+    const msDia = /^\d{4}-\d{2}-\d{2}$/.test(diaText) ? new Date(`${diaText}T00:00:00Z`).getTime() : NaN;
+    const diaValid = !Number.isNaN(msDia) && new Date(msDia).toISOString().slice(0, 10) === diaText ? diaText : null;
+    const data = 'COALESCE(c."enviatAt", c."createdAt")';
     // Només es fa servir una finestra coneguda (mai text del client dins el SQL).
     const condicioFinestra = Object.hasOwn(FINESTRES, finestra) ? ` AND ${FINESTRES[finestra]}` : '';
     const p = Math.max(1, Math.floor(Number(pagina)) || 1);
@@ -136,9 +158,12 @@ function creaEstadistiques(bd, estat, config) {
          LIMIT 1
        ) a ON true
        WHERE ($1::text[] IS NULL OR c."estat"::text = ANY($1::text[])) AND ($2::text IS NULL OR c."destinatariEmail" ILIKE $2)${condicioFinestra}
-       ORDER BY c."createdAt" DESC, c."id" DESC
+         AND ($4::timestamp IS NULL OR (${data} >= $4::timestamp AND ${data} < $4::timestamp + interval '1 hour'))
+         AND ($5::date IS NULL OR (${data} >= ($5::date)::timestamp AT TIME ZONE 'Europe/Madrid' AT TIME ZONE 'UTC'
+                                   AND ${data} < ($5::date + 1)::timestamp AT TIME ZONE 'Europe/Madrid' AT TIME ZONE 'UTC'))
+       ORDER BY ${horaInici || diaValid ? data : 'c."createdAt"'} DESC, c."id" DESC
        LIMIT ${MIDA_PAGINA} OFFSET $3`,
-      [estatValid, patro, (p - 1) * MIDA_PAGINA],
+      [estatValid, patro, (p - 1) * MIDA_PAGINA, horaInici, diaValid],
     );
 
     const files = r.rows.map((x) => ({
