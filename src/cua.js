@@ -4,7 +4,7 @@
 const crypto = require('node:crypto');
 
 const ARA_UTC = "(now() AT TIME ZONE 'UTC')";
-const COLUMNES_CORREU = '"id", "leadId", "automatitzacioId", "destinatariEmail", "destinatariNom", "assumpte", "cosHtml", "cosText", "intents"';
+const COLUMNES_CORREU = '"id", "leadId", "automatitzacioId", "destinatariEmail", "destinatariNom", "assumpte", "cosHtml", "cosText", "intents", "tag"';
 
 function creaCua(bd, log, workerId = null) {
   // Reserva atòmica: FOR UPDATE SKIP LOCKED evita que dos workers agafin el mateix.

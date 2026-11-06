@@ -30,6 +30,20 @@ test('auditoria: el metadata porta el workerId (i res si no n’hi ha)', async (
   assert.equal('workerId' in meta2, false);
 });
 
+test('Reply-To: només als correus de reserva i només si està configurat', async () => {
+  const servidor = creaSmtpFals();
+  const port = await servidor.arrenca();
+  const config = { smtp: { host: '127.0.0.1', port, user: 'u', pass: 'p' }, remitent: { email: 'planner@uauu.cat', nom: 'UAUU' }, respondAReserves: 'visites@uauu.cat' };
+  const enviador = creaEnviador(config, { requireTLS: false, ignoreTLS: true });
+  const correu = { destinatariEmail: 'a@exemple.com', destinatariNom: null, assumpte: 'X', cosHtml: '<p>x</p>', cosText: 'x' };
+  try {
+    await enviador.envia({ ...correu, tag: 'RESERVA' });
+    await enviador.envia({ ...correu, tag: 'LEAD_FUNNEL' });
+    assert.match(servidor.rebuts[0].dades, /Reply-To: visites@uauu\.cat/i);
+    assert.doesNotMatch(servidor.rebuts[1].dades, /Reply-To:/i);
+  } finally { enviador.tanca(); await servidor.atura(); }
+});
+
 test('Message-ID: porta l’identificador del worker i el domini del remitent', async () => {
   const servidor = creaSmtpFals();
   const port = await servidor.arrenca();

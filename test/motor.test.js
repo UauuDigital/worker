@@ -132,6 +132,25 @@ test('cancel·la si el lead no accepta correus o si el seu estat ja no és el pe
   } finally { await m.neteja(); }
 });
 
+test('els correus de reserva (tag RESERVA) són transaccionals: s’envien encara que el lead no accepti correus', async () => {
+  const m = await muntatge({
+    cua: {
+      leads: { l1: { acceptaCorreus: false, estat: 'CONVERTIT' } },
+      correus: [
+        { destinatariEmail: 'a@exemple.com', leadId: 'l1', tag: 'RESERVA' },
+        { destinatariEmail: 'b@exemple.com', leadId: 'l1', tag: 'LEAD_FUNNEL' },
+      ],
+    },
+  });
+  try {
+    await m.motor.tick(10);
+    assert.equal(m.cua.files[0].estat, 'ENVIAT');
+    assert.equal(m.cua.files[1].estat, 'CANCELAT');
+    assert.equal(m.cua.files[1].motiuCancelacio, 'El lead no accepta rebre correus');
+    assert.equal(m.servidor.rebuts.length, 1);
+  } finally { await m.neteja(); }
+});
+
 test('tick: dues crides alhora no processen el mateix; la segona torna «ocupat»', async () => {
   const m = await muntatge({
     smtp: { lent: 150 },
