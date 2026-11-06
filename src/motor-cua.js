@@ -50,7 +50,9 @@ function creaMotor({
     if (!regles.permesPerLlistaBlanca(c.destinatariEmail, config.llistaBlanca)) {
       return 'Destinatari fora de la llista blanca (mode desenvolupament)';
     }
-    if (c.leadId && !(await cua.leadAcceptaCorreus(c.leadId))) return 'El lead no accepta rebre correus';
+    // Els correus de reserva (tag RESERVA) són TRANSACCIONALS: parlen d'una visita concreta i no són màrqueting,
+    // així que NO depenen de «accepta correus». Igual que a apps/worker del CRM. Es respecta per a la resta.
+    if (c.tag !== 'RESERVA' && c.leadId && !(await cua.leadAcceptaCorreus(c.leadId))) return 'El lead no accepta rebre correus';
     if (!(await cua.estatLeadPermet(c.automatitzacioId, c.leadId))) {
       return 'El lead ja no és en un estat en què s’hagi d’enviar aquest correu';
     }

@@ -53,6 +53,8 @@ function carregaConfig(env) {
       urlBd,
       smtp: { host: env.SMTP_HOST, port: smtpPort, user: env.SMTP_USER, pass: env.SMTP_PASS },
       remitent: { email: env.CORREU_REMITENT_EMAIL, nom: env.CORREU_REMITENT_NOM || 'UAUU weddings & events' },
+      // «Respon a» dels correus de reserva (tag RESERVA), perquè el client no escrigui a una bústia que ningú mira.
+      respondAReserves: (env.CORREU_RESPON_A_RESERVES || '').trim() || null,
       llistaBlanca: (env.CORREU_LLISTA_BLANCA || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
       mode,
       tickSecret: env.TICK_SECRET || null,
