@@ -28,9 +28,10 @@ function creaEnviador(config, opcions = {}) {
         from: { name: config.remitent.nom, address: config.remitent.email },
         to: c.destinatariNom ? { name: c.destinatariNom, address: c.destinatariEmail } : c.destinatariEmail,
         subject: c.assumpte,
-        ...(c.tag === 'RESERVA' && config.respondAReserves ? { replyTo: config.respondAReserves } : {}),
+        ...((c.tag === 'RESERVA' || c.tag === 'PRESSUPOST') && config.respondAReserves ? { replyTo: config.respondAReserves } : {}),
         html: c.cosHtml,
         text: c.cosText,
+        ...(c.adjuntNom && c.adjuntDades ? { attachments: [{ filename: c.adjuntNom, content: c.adjuntDades, contentType: 'application/pdf' }] } : {}),
       });
       return info.messageId || null;
     },

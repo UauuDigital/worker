@@ -99,3 +99,6 @@ El panell mostra «Antic» per als correus tancats per un worker sense etiqueta 
 
 ## Garantia d'enviament
 «Almenys un cop»: si el procés cau just després d'enviar i abans de desar l'estat, el correu es pot repetir quan caduqui el bloqueig (5 min). El desat de l'estat `ENVIAT` es reintenta 3 vegades per minimitzar-ho.
+
+## Correus amb adjunt
+Els correus de pressupost (tag `PRESSUPOST`) porten el PDF a `correus_cua.adjuntNom` i `adjuntDades` (còpia feta per l'API; el worker NO té accés a Storage). El worker l'adjunta en enviar i posa `adjuntDades` a `NULL` quan el correu passa a `ENVIAT`, `CANCELAT` o `FALLIT`. Si una fila té `adjuntNom` però no `adjuntDades`, queda `FALLIT` sense enviar res. Aquests correus són transaccionals (no depenen de «accepta correus») i porten «Respon a» (`CORREU_RESPON_A_RESERVES`). **Desplega el worker abans que l'API**: un worker antic enviaria el correu sense adjunt.

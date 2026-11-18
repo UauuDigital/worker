@@ -4,7 +4,7 @@
 const crypto = require('node:crypto');
 
 const ARA_UTC = "(now() AT TIME ZONE 'UTC')";
-const COLUMNES_CORREU = '"id", "leadId", "automatitzacioId", "destinatariEmail", "destinatariNom", "assumpte", "cosHtml", "cosText", "intents", "tag"';
+const COLUMNES_CORREU = '"id", "leadId", "automatitzacioId", "destinatariEmail", "destinatariNom", "assumpte", "cosHtml", "cosText", "intents", "tag", "adjuntNom", "adjuntDades"';
 
 function creaCua(bd, log, workerId = null) {
   // Reserva atòmica: FOR UPDATE SKIP LOCKED evita que dos workers agafin el mateix.
@@ -52,7 +52,7 @@ function creaCua(bd, log, workerId = null) {
 
   async function marcaEnviat(c, messageId) {
     await bd.query(
-      `UPDATE "correus_cua" SET "estat" = $2::"EstatCorreu", "enviatAt" = ${ARA_UTC}, "messageId" = $3, "bloquejatFins" = NULL, "darrerError" = NULL
+      `UPDATE "correus_cua" SET "estat" = $2::"EstatCorreu", "enviatAt" = ${ARA_UTC}, "messageId" = $3, "bloquejatFins" = NULL, "darrerError" = NULL, "adjuntDades" = NULL
        WHERE "id" = $1`,
       [c.id, 'ENVIAT', messageId],
     );
@@ -61,7 +61,7 @@ function creaCua(bd, log, workerId = null) {
 
   async function marcaCancelat(c, motiu) {
     await bd.query(
-      `UPDATE "correus_cua" SET "estat" = $2::"EstatCorreu", "motiuCancelacio" = $3, "bloquejatFins" = NULL WHERE "id" = $1`,
+      `UPDATE "correus_cua" SET "estat" = $2::"EstatCorreu", "motiuCancelacio" = $3, "bloquejatFins" = NULL, "adjuntDades" = NULL WHERE "id" = $1`,
       [c.id, 'CANCELAT', motiu],
     );
     await audita(c, 'CORREU_CANCELAT', `Correu «${c.assumpte}» per a ${c.destinatariEmail} cancel·lat: ${motiu}`);
@@ -69,7 +69,7 @@ function creaCua(bd, log, workerId = null) {
 
   async function marcaFallit(c, errorTecnic) {
     await bd.query(
-      `UPDATE "correus_cua" SET "estat" = $2::"EstatCorreu", "darrerError" = $3, "bloquejatFins" = NULL WHERE "id" = $1`,
+      `UPDATE "correus_cua" SET "estat" = $2::"EstatCorreu", "darrerError" = $3, "bloquejatFins" = NULL, "adjuntDades" = NULL WHERE "id" = $1`,
       [c.id, 'FALLIT', errorTecnic.slice(0, 1000)],
     );
     // L'error tècnic NO va a l'auditoria (només a la cua, per a depuració).
