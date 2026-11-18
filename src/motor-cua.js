@@ -34,6 +34,12 @@ function creaMotor({
       estat.resultat('cancelat');
       return false;
     }
+    // Un correu que anuncia un adjunt però no el porta no pot sortir: sense el PDF el client rebria un pressupost buit.
+    if (c.adjuntNom && !c.adjuntDades) {
+      await cua.marcaFallit(c, 'Falta el fitxer adjunt a la cua');
+      estat.resultat('fallit');
+      return false;
+    }
     try {
       const messageId = await enviador.envia(c);
       // Si això falla, el correu ja ha sortit: es reintenta el desat per no duplicar-lo.
@@ -50,9 +56,9 @@ function creaMotor({
     if (!regles.permesPerLlistaBlanca(c.destinatariEmail, config.llistaBlanca)) {
       return 'Destinatari fora de la llista blanca (mode desenvolupament)';
     }
-    // Els correus de reserva (tag RESERVA) són TRANSACCIONALS: parlen d'una visita concreta i no són màrqueting,
-    // així que NO depenen de «accepta correus». Igual que a apps/worker del CRM. Es respecta per a la resta.
-    if (c.tag !== 'RESERVA' && c.leadId && !(await cua.leadAcceptaCorreus(c.leadId))) return 'El lead no accepta rebre correus';
+    // Els correus de reserva (tag RESERVA) i de pressupost (tag PRESSUPOST) són TRANSACCIONALS: parlen d'una visita o d'un pressupost
+    // concrets que el client ha demanat i no són màrqueting, així que NO depenen de «accepta correus». Es respecta per a la resta.
+    if (c.tag !== 'RESERVA' && c.tag !== 'PRESSUPOST' && c.leadId && !(await cua.leadAcceptaCorreus(c.leadId))) return 'El lead no accepta rebre correus';
     if (!(await cua.estatLeadPermet(c.automatitzacioId, c.leadId))) {
       return 'El lead ja no és en un estat en què s’hagi d’enviar aquest correu';
     }
